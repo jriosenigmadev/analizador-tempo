@@ -979,141 +979,155 @@ else:
         with tab3:
             st.subheader("Top Consumidores de Horas")
 
-            # Crear ranking de personas
-            ranking = df_filtrado.groupby("Persona").agg({
-                "Horas": "sum",
-                "Costo ($)": "sum"
-            }).reset_index()
-            ranking.columns = ["Persona", "Horas", "Costo"]
-            ranking = ranking.sort_values("Horas", ascending=False).reset_index(drop=True)
-            ranking.index = ranking.index + 1
-            ranking["% del Total"] = (ranking["Horas"] / ranking["Horas"].sum() * 100).round(2)
-
-            # Top 5
-            st.markdown("#### 🏆 Top 5 Consumidores")
-            col_top = st.columns(5)
-            top_5 = ranking.head(5)
-
-            for idx, (col, (_, row)) in enumerate(zip(col_top, top_5.iterrows())):
-                with col:
-                    st.metric(
-                        f"#{idx+1} - {row['Persona']}",
-                        f"{row['Horas']:.2f} hrs",
-                        f"{row['% del Total']:.1f}% del total"
-                    )
-
-            st.markdown("---")
-
-            # Tabla completa de ranking
-            st.markdown("#### 📊 Ranking Completo")
-            st.dataframe(
-                ranking[["Persona", "Horas", "Costo", "% del Total"]],
-                use_container_width=True
+            # Filtro por persona
+            personas_disponibles = sorted(df_filtrado["Persona"].unique())
+            personas_seleccionadas = st.multiselect(
+                "🔎 Filtrar por Persona(s):",
+                personas_disponibles,
+                default=personas_disponibles,
+                key="filtro_personas"
             )
 
-            st.markdown("---")
+            if not personas_seleccionadas:
+                st.warning("⚠️ Selecciona al menos una persona para ver el análisis.")
+            else:
+                df_personas_filtrado = df_filtrado[df_filtrado["Persona"].isin(personas_seleccionadas)]
 
-            # Desglose por persona seleccionada
-            st.markdown("#### 📋 Desglose de Proyectos por Persona")
-
-            persona_selec_desglose = st.selectbox(
-                "Selecciona una persona para ver sus proyectos y horas:",
-                ranking["Persona"].tolist(),
-                key="persona_desglose"
-            )
-
-            if persona_selec_desglose:
-                # Filtrar datos de la persona seleccionada
-                df_persona = df_filtrado[df_filtrado["Persona"] == persona_selec_desglose]
-
-                # Crear tabla de proyectos de la persona
-                proyectos_persona = df_persona.groupby("Proyecto").agg({
+                # Crear ranking de personas
+                ranking = df_personas_filtrado.groupby("Persona").agg({
                     "Horas": "sum",
                     "Costo ($)": "sum"
                 }).reset_index()
-                proyectos_persona.columns = ["Proyecto", "Horas", "Costo"]
-                proyectos_persona = proyectos_persona.sort_values("Horas", ascending=False)
-                proyectos_persona["% de Sus Horas"] = (proyectos_persona["Horas"] / proyectos_persona["Horas"].sum() * 100).round(2)
-                proyectos_persona = proyectos_persona.reset_index(drop=True)
-                proyectos_persona.index = proyectos_persona.index + 1
+                ranking.columns = ["Persona", "Horas", "Costo"]
+                ranking = ranking.sort_values("Horas", ascending=False).reset_index(drop=True)
+                ranking.index = ranking.index + 1
+                ranking["% del Total"] = (ranking["Horas"] / ranking["Horas"].sum() * 100).round(2)
 
-                # Mostrar métricas de la persona
-                col_pers_1, col_pers_2, col_pers_3 = st.columns(3)
-                col_pers_1.metric("Proyectos en los que trabajó", len(proyectos_persona))
-                col_pers_2.metric("Total de Horas", f"{proyectos_persona['Horas'].sum():.2f}")
-                col_pers_3.metric("Costo Total Generado", f"${proyectos_persona['Costo'].sum():,.2f}")
+                # Top 5
+                st.markdown("#### 🏆 Top 5 Consumidores")
+                col_top = st.columns(5)
+                top_5 = ranking.head(5)
 
-                # Tabla de proyectos
-                st.dataframe(
-                    proyectos_persona[["Proyecto", "Horas", "Costo", "% de Sus Horas"]],
-                    use_container_width=True,
-                    column_config={
-                        "Horas": st.column_config.NumberColumn("Horas", format="%.2f"),
-                        "Costo": st.column_config.NumberColumn("Costo ($)", format="$%.2f"),
-                        "% de Sus Horas": st.column_config.NumberColumn("% de Sus Horas", format="%.2f%%")
-                    }
-                )
-
-                # Gráficos de proyectos de la persona
-                col_pers_graf_1, col_pers_graf_2 = st.columns(2)
-
-                with col_pers_graf_1:
-                    fig_pers_pie = px.pie(
-                        proyectos_persona,
-                        values="Horas",
-                        names="Proyecto",
-                        title=f"Distribución de Horas de {persona_selec_desglose}"
-                    )
-                    fig_pers_pie.update_layout(height=400)
-                    fig_pers_pie = aplicar_tema_plotly(fig_pers_pie)
-                    st.plotly_chart(fig_pers_pie, use_container_width=True)
-
-                with col_pers_graf_2:
-                    fig_pers_bar = px.bar(
-                        proyectos_persona.sort_values("Horas", ascending=True),
-                        x="Horas",
-                        y="Proyecto",
-                        orientation='h',
-                        title=f"Proyectos de {persona_selec_desglose}",
-                        text="Horas"
-                    )
-                    fig_pers_bar.update_traces(texttemplate='%{x:.2f}', textposition='outside')
-                    fig_pers_bar.update_layout(height=max(300, len(proyectos_persona) * 40))
-                    fig_pers_bar = aplicar_tema_plotly(fig_pers_bar)
-                    st.plotly_chart(fig_pers_bar, use_container_width=True)
+                for idx, (col, (_, row)) in enumerate(zip(col_top, top_5.iterrows())):
+                    with col:
+                        st.metric(
+                            f"#{idx+1} - {row['Persona']}",
+                            f"{row['Horas']:.2f} hrs",
+                            f"{row['% del Total']:.1f}% del total"
+                        )
 
                 st.markdown("---")
 
-                # Detalle de actividades de la persona
-                st.markdown(f"#### 📝 Actividades de {persona_selec_desglose}")
-                actividades_persona = df_persona.groupby(["Proyecto", "Actividad"]).agg({
-                    "Horas": "sum",
-                    "Costo ($)": "sum"
-                }).reset_index()
-                actividades_persona = actividades_persona.sort_values("Horas", ascending=False)
+                # Tabla completa de ranking
+                st.markdown("#### 📊 Ranking Completo")
                 st.dataframe(
-                    actividades_persona,
-                    use_container_width=True,
-                    hide_index=True,
-                    column_config={
-                        "Horas": st.column_config.NumberColumn("Horas", format="%.2f"),
-                        "Costo ($)": st.column_config.NumberColumn("Costo ($)", format="$%.2f")
-                    }
+                    ranking[["Persona", "Horas", "Costo", "% del Total"]],
+                    use_container_width=True
                 )
 
-            st.markdown("---")
+                st.markdown("---")
 
-            # Gráfico de distribución
-            st.subheader("Distribución de Horas por Persona")
-            fig_dist = px.pie(
-                ranking,
-                values="Horas",
-                names="Persona",
-                title="Proporción de Horas por Persona"
-            )
-            fig_dist.update_layout(height=400)
-            fig_dist = aplicar_tema_plotly(fig_dist)
-            st.plotly_chart(fig_dist, use_container_width=True)
+                # Desglose por persona seleccionada
+                st.markdown("#### 📋 Desglose de Proyectos por Persona")
+
+                persona_selec_desglose = st.selectbox(
+                    "Selecciona una persona para ver sus proyectos y horas:",
+                    ranking["Persona"].tolist(),
+                    key="persona_desglose"
+                )
+
+                if persona_selec_desglose:
+                    # Filtrar datos de la persona seleccionada
+                    df_persona = df_personas_filtrado[df_personas_filtrado["Persona"] == persona_selec_desglose]
+
+                    # Crear tabla de proyectos de la persona
+                    proyectos_persona = df_persona.groupby("Proyecto").agg({
+                        "Horas": "sum",
+                        "Costo ($)": "sum"
+                    }).reset_index()
+                    proyectos_persona.columns = ["Proyecto", "Horas", "Costo"]
+                    proyectos_persona = proyectos_persona.sort_values("Horas", ascending=False)
+                    proyectos_persona["% de Sus Horas"] = (proyectos_persona["Horas"] / proyectos_persona["Horas"].sum() * 100).round(2)
+                    proyectos_persona = proyectos_persona.reset_index(drop=True)
+                    proyectos_persona.index = proyectos_persona.index + 1
+
+                    # Mostrar métricas de la persona
+                    col_pers_1, col_pers_2, col_pers_3 = st.columns(3)
+                    col_pers_1.metric("Proyectos en los que trabajó", len(proyectos_persona))
+                    col_pers_2.metric("Total de Horas", f"{proyectos_persona['Horas'].sum():.2f}")
+                    col_pers_3.metric("Costo Total Generado", f"${proyectos_persona['Costo'].sum():,.2f}")
+
+                    # Tabla de proyectos
+                    st.dataframe(
+                        proyectos_persona[["Proyecto", "Horas", "Costo", "% de Sus Horas"]],
+                        use_container_width=True,
+                        column_config={
+                            "Horas": st.column_config.NumberColumn("Horas", format="%.2f"),
+                            "Costo": st.column_config.NumberColumn("Costo ($)", format="$%.2f"),
+                            "% de Sus Horas": st.column_config.NumberColumn("% de Sus Horas", format="%.2f%%")
+                        }
+                    )
+
+                    # Gráficos de proyectos de la persona
+                    col_pers_graf_1, col_pers_graf_2 = st.columns(2)
+
+                    with col_pers_graf_1:
+                        fig_pers_pie = px.pie(
+                            proyectos_persona,
+                            values="Horas",
+                            names="Proyecto",
+                            title=f"Distribución de Horas de {persona_selec_desglose}"
+                        )
+                        fig_pers_pie.update_layout(height=400)
+                        fig_pers_pie = aplicar_tema_plotly(fig_pers_pie)
+                        st.plotly_chart(fig_pers_pie, use_container_width=True)
+
+                    with col_pers_graf_2:
+                        fig_pers_bar = px.bar(
+                            proyectos_persona.sort_values("Horas", ascending=True),
+                            x="Horas",
+                            y="Proyecto",
+                            orientation='h',
+                            title=f"Proyectos de {persona_selec_desglose}",
+                            text="Horas"
+                        )
+                        fig_pers_bar.update_traces(texttemplate='%{x:.2f}', textposition='outside')
+                        fig_pers_bar.update_layout(height=max(300, len(proyectos_persona) * 40))
+                        fig_pers_bar = aplicar_tema_plotly(fig_pers_bar)
+                        st.plotly_chart(fig_pers_bar, use_container_width=True)
+
+                    st.markdown("---")
+
+                    # Detalle de actividades de la persona
+                    st.markdown(f"#### 📝 Actividades de {persona_selec_desglose}")
+                    actividades_persona = df_persona.groupby(["Proyecto", "Actividad"]).agg({
+                        "Horas": "sum",
+                        "Costo ($)": "sum"
+                    }).reset_index()
+                    actividades_persona = actividades_persona.sort_values("Horas", ascending=False)
+                    st.dataframe(
+                        actividades_persona,
+                        use_container_width=True,
+                        hide_index=True,
+                        column_config={
+                            "Horas": st.column_config.NumberColumn("Horas", format="%.2f"),
+                            "Costo ($)": st.column_config.NumberColumn("Costo ($)", format="$%.2f")
+                        }
+                    )
+
+                st.markdown("---")
+
+                # Gráfico de distribución
+                st.subheader("Distribución de Horas por Persona")
+                fig_dist = px.pie(
+                    ranking,
+                    values="Horas",
+                    names="Persona",
+                    title="Proporción de Horas por Persona"
+                )
+                fig_dist.update_layout(height=400)
+                fig_dist = aplicar_tema_plotly(fig_dist)
+                st.plotly_chart(fig_dist, use_container_width=True)
 
         # ---------------------------------------------------------
         # TAB 4: ANÁLISIS POR ACTIVIDAD
