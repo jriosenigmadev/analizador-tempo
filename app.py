@@ -466,14 +466,65 @@ presupuestos = cargar_presupuestos()
 tab_view, tab_edit = st.sidebar.tabs(["👁️ Ver", "✏️ Editar"])
 
 with tab_view:
-    st.markdown("**Presupuestos Configurados**")
+    st.markdown("### 💰 Presupuestos Configurados")
     if presupuestos:
-        for proyecto, config in presupuestos.items():
-            with st.container():
-                st.markdown(f"**{proyecto}**")
-                col1, col2 = st.columns(2)
-                col1.metric("Presupuesto", f"{config['presupuesto_horas']:.1f} hrs")
-                col2.metric("Costo/Hora", f"${config['costo_hora']:.2f}")
+        # Agregar CSS personalizado para tarjetas
+        st.markdown("""
+        <style>
+            .presupuesto-card {
+                background: linear-gradient(135deg, #f0f4f8 0%, #ffffff 100%);
+                border: 2px solid #003d99;
+                border-radius: 12px;
+                padding: 1.5rem;
+                margin-bottom: 1rem;
+                box-shadow: 0 4px 12px rgba(0, 61, 153, 0.08);
+                transition: transform 0.2s, box-shadow 0.2s;
+            }
+            .presupuesto-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 8px 16px rgba(0, 61, 153, 0.15);
+            }
+            .presupuesto-title {
+                color: #003d99;
+                font-size: 1.2em;
+                font-weight: 600;
+                margin-bottom: 0.8rem;
+            }
+            .presupuesto-value {
+                font-size: 1.5em;
+                font-weight: 700;
+                color: #002e73;
+            }
+            .presupuesto-label {
+                font-size: 0.85em;
+                color: #505050;
+                font-weight: 500;
+                margin-top: 0.3rem;
+            }
+        </style>
+        """, unsafe_allow_html=True)
+
+        # Mostrar presupuestos en grid
+        num_cols = 3
+        cols = st.columns(num_cols)
+
+        for idx, (proyecto, config) in enumerate(presupuestos.items()):
+            with cols[idx % num_cols]:
+                st.markdown(f"""
+                <div class="presupuesto-card">
+                    <div class="presupuesto-title">{proyecto}</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div>
+                            <div class="presupuesto-value">{config['presupuesto_horas']:.0f}</div>
+                            <div class="presupuesto-label">Horas</div>
+                        </div>
+                        <div>
+                            <div class="presupuesto-value">${config['costo_hora']:.2f}</div>
+                            <div class="presupuesto-label">Costo/Hora</div>
+                        </div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
     else:
         st.info("No hay presupuestos configurados")
 
