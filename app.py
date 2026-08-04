@@ -274,6 +274,70 @@ def aplicar_tema_plotly(fig):
     return fig
 
 # ---------------------------------------------------------
+# FUNCIONES DE GESTIÓN DE PRESUPUESTOS POR PROYECTO
+# ---------------------------------------------------------
+@st.cache_data
+def cargar_presupuestos():
+    """Carga los presupuestos desde el archivo YAML"""
+    presupuestos_file = Path(__file__).parent / "presupuestos.yaml"
+
+    if not presupuestos_file.exists():
+        return {}
+
+    with open(presupuestos_file) as f:
+        config = yaml.load(f, Loader=yaml.SafeLoader)
+
+    return config.get("proyectos", {}) if config else {}
+
+def guardar_presupuestos(presupuestos):
+    """Guarda los presupuestos en el archivo YAML"""
+    presupuestos_file = Path(__file__).parent / "presupuestos.yaml"
+    config = {"proyectos": presupuestos}
+
+    with open(presupuestos_file, "w") as f:
+        yaml.dump(config, f)
+
+def obtener_presupuesto_proyecto(nombre_proyecto, presupuestos):
+    """Obtiene el presupuesto y costo de un proyecto"""
+    if nombre_proyecto in presupuestos:
+        return presupuestos[nombre_proyecto]
+    return {"presupuesto_horas": 0, "costo_hora": 0}
+
+def calcular_estado_proyecto(horas_usadas, presupuesto_horas, costo_hora):
+    """Calcula el estado de un proyecto basado en su presupuesto"""
+    if presupuesto_horas <= 0:
+        return {
+            "estado": "⚠️ Sin presupuesto",
+            "porcentaje": 0,
+            "horas_restantes": 0,
+            "costo_total": horas_usadas * costo_hora,
+            "costo_presupuestado": 0
+        }
+
+    porcentaje = (horas_usadas / presupuesto_horas) * 100
+    horas_restantes = max(0, presupuesto_horas - horas_usadas)
+    costo_total = horas_usadas * costo_hora
+    costo_presupuestado = presupuesto_horas * costo_hora
+
+    # Determinar el estado
+    if porcentaje < 75:
+        estado = "🟢 En control"
+    elif porcentaje < 100:
+        estado = "🟡 Cerca del límite"
+    elif porcentaje < 120:
+        estado = "🔴 Excedido"
+    else:
+        estado = "🔴🔴 Muy excedido"
+
+    return {
+        "estado": estado,
+        "porcentaje": porcentaje,
+        "horas_restantes": horas_restantes,
+        "costo_total": costo_total,
+        "costo_presupuestado": costo_presupuestado
+    }
+
+# ---------------------------------------------------------
 # CONFIGURACIÓN DE AUTENTICACIÓN
 # ---------------------------------------------------------
 config_file = Path(__file__).parent / "config.yaml"
@@ -570,71 +634,6 @@ def procesar_worklogs(_datos_crudos, j_email, j_token):
         })
         
     return pd.DataFrame(filas)
-
-
-# ---------------------------------------------------------
-# FUNCIONES DE GESTIÓN DE PRESUPUESTOS POR PROYECTO
-# ---------------------------------------------------------
-@st.cache_data
-def cargar_presupuestos():
-    """Carga los presupuestos desde el archivo YAML"""
-    presupuestos_file = Path(__file__).parent / "presupuestos.yaml"
-
-    if not presupuestos_file.exists():
-        return {}
-
-    with open(presupuestos_file) as f:
-        config = yaml.load(f, Loader=yaml.SafeLoader)
-
-    return config.get("proyectos", {}) if config else {}
-
-def guardar_presupuestos(presupuestos):
-    """Guarda los presupuestos en el archivo YAML"""
-    presupuestos_file = Path(__file__).parent / "presupuestos.yaml"
-    config = {"proyectos": presupuestos}
-
-    with open(presupuestos_file, "w") as f:
-        yaml.dump(config, f)
-
-def obtener_presupuesto_proyecto(nombre_proyecto, presupuestos):
-    """Obtiene el presupuesto y costo de un proyecto"""
-    if nombre_proyecto in presupuestos:
-        return presupuestos[nombre_proyecto]
-    return {"presupuesto_horas": 0, "costo_hora": 0}
-
-def calcular_estado_proyecto(horas_usadas, presupuesto_horas, costo_hora):
-    """Calcula el estado de un proyecto basado en su presupuesto"""
-    if presupuesto_horas <= 0:
-        return {
-            "estado": "⚠️ Sin presupuesto",
-            "porcentaje": 0,
-            "horas_restantes": 0,
-            "costo_total": horas_usadas * costo_hora,
-            "costo_presupuestado": 0
-        }
-
-    porcentaje = (horas_usadas / presupuesto_horas) * 100
-    horas_restantes = max(0, presupuesto_horas - horas_usadas)
-    costo_total = horas_usadas * costo_hora
-    costo_presupuestado = presupuesto_horas * costo_hora
-
-    # Determinar el estado
-    if porcentaje < 75:
-        estado = "🟢 En control"
-    elif porcentaje < 100:
-        estado = "🟡 Cerca del límite"
-    elif porcentaje < 120:
-        estado = "🔴 Excedido"
-    else:
-        estado = "🔴🔴 Muy excedido"
-
-    return {
-        "estado": estado,
-        "porcentaje": porcentaje,
-        "horas_restantes": horas_restantes,
-        "costo_total": costo_total,
-        "costo_presupuestado": costo_presupuestado
-    }
 
 
 # ---------------------------------------------------------
