@@ -460,6 +460,8 @@ presupuestos = cargar_presupuestos()
 # SECCIÓN DE GESTIÓN DE PRESUPUESTOS EN SIDEBAR
 # ---------------------------------------------------------
 st.sidebar.header("💰 Gestión de Presupuestos")
+st.sidebar.caption("📌 Configura valores por defecto con 'Todos' o específicos por proyecto")
+
 with st.sidebar.expander("✏️ Agregar/Editar Presupuesto"):
     col1, col2 = st.columns(2)
 
@@ -645,19 +647,23 @@ else:
         proyectos_disponibles = sorted(df['Proyecto'].unique())
         proyecto_seleccionado = st.sidebar.selectbox("Seleccionar Ticket / Proyecto:", ["Todos"] + list(proyectos_disponibles))
 
+        # Obtener valores por defecto globales
+        config_global = obtener_presupuesto_proyecto("Todos", presupuestos)
+        valor_hora_default = config_global.get("costo_hora", 50.0)
+        presupuesto_horas_default = config_global.get("presupuesto_horas", 100.0)
+
         # Aplicar filtro
         if proyecto_seleccionado == "Todos":
             df_filtrado = df.copy()
             # Para "Todos", usar presupuesto global configurado
-            config_global = obtener_presupuesto_proyecto("Todos", presupuestos)
-            valor_hora = config_global.get("costo_hora", 0)
-            presupuesto_horas = config_global.get("presupuesto_horas", 0)
+            valor_hora = valor_hora_default
+            presupuesto_horas = presupuesto_horas_default
         else:
             df_filtrado = df[df['Proyecto'] == proyecto_seleccionado].copy()
-            # Obtener presupuesto específico del proyecto
+            # Obtener presupuesto específico del proyecto (si no existe, usa valores por defecto globales)
             config_proyecto = obtener_presupuesto_proyecto(proyecto_seleccionado, presupuestos)
-            valor_hora = config_proyecto.get("costo_hora", 0)
-            presupuesto_horas = config_proyecto.get("presupuesto_horas", 0)
+            valor_hora = config_proyecto.get("costo_hora", valor_hora_default)
+            presupuesto_horas = config_proyecto.get("presupuesto_horas", presupuesto_horas_default)
 
         # Cálculos de la tabla
         df_filtrado['Costo ($)'] = df_filtrado['Horas'] * valor_hora
