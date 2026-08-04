@@ -3,11 +3,11 @@ credentials:
     admin:
       email: admin@example.com
       name: Administrador
-      password: admin123
+      password: Enigm42026*
     usuario:
       email: user@example.com
-      name: Usuario Demo
-      password: demo123
+      name: soporte
+      password: Soport32026*
 
 cookie:
   expiry_days: 30
