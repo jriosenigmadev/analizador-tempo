@@ -19,41 +19,73 @@ st.set_page_config(page_title="Dashboard Financiero Tempo", layout="wide", page_
 if "theme" not in st.session_state:
     st.session_state.theme = "Automático"
 
-# Función para aplicar CSS de tema
-def aplicar_tema_css(tema):
+# Función para aplicar tema
+def aplicar_tema(tema):
     if tema == "Claro":
+        # Configurar template de Plotly para tema claro
+        import plotly.graph_objects as go
+        go.Figure().update_layout(template="plotly")
+
         css = """
         <style>
-            :root {
-                color-scheme: light;
+            [data-testid="stApp"] {
+                background-color: #ffffff;
+                color: #1f1f1f;
             }
             body {
                 background-color: #ffffff !important;
                 color: #1f1f1f !important;
             }
-            .stApp {
+            .stMarkdown, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3,
+            .stMarkdown h4, .stMarkdown h5, .stMarkdown h6, .stMarkdown p {
+                color: #1f1f1f !important;
+            }
+            .stMetric label {
+                color: #1f1f1f !important;
+            }
+            .stDataFrame {
                 background-color: #ffffff !important;
             }
-            .stMarkdown {
+            .stSelectbox label, .stTextInput label {
+                color: #1f1f1f !important;
+            }
+            .stSelectbox [data-baseweb="select"] {
+                background-color: #f0f2f6 !important;
+            }
+            /* Cambiar el fondo de la sidebar */
+            [data-testid="stSidebar"] {
+                background-color: #f8f9fa !important;
+            }
+            [data-testid="stSidebar"] .stMarkdown {
                 color: #1f1f1f !important;
             }
         </style>
         """
+        st.session_state.plotly_template = "plotly"
     elif tema == "Oscuro":
-        css = """
-        <style>
-            :root {
-                color-scheme: dark;
-            }
-        </style>
-        """
+        import plotly.graph_objects as go
+        go.Figure().update_layout(template="plotly_dark")
+
+        css = ""
+        st.session_state.plotly_template = "plotly_dark"
     else:  # Automático
+        st.session_state.plotly_template = "plotly"
         css = ""
 
     if css:
         st.markdown(css, unsafe_allow_html=True)
 
-aplicar_tema_css(st.session_state.theme)
+# Aplicar tema inicial
+if "plotly_template" not in st.session_state:
+    st.session_state.plotly_template = "plotly"
+
+# Función helper para aplicar tema a gráficos Plotly
+def aplicar_tema_plotly(fig):
+    """Aplica el template de tema a un gráfico Plotly"""
+    fig.update_layout(template=st.session_state.plotly_template)
+    return fig
+
+aplicar_tema(st.session_state.theme)
 
 # ---------------------------------------------------------
 # CONFIGURACIÓN DE AUTENTICACIÓN
@@ -129,7 +161,7 @@ with st.sidebar:
     )
     if theme != st.session_state.theme:
         st.session_state.theme = theme
-        aplicar_tema_css(theme)
+        aplicar_tema(theme)
         st.rerun()
 
     st.divider()
@@ -427,6 +459,7 @@ else:
                         title=f"Distribución de Horas en {proyecto_selec_desglose}"
                     )
                     fig_dev_pie.update_layout(height=400)
+                    fig_dev_pie = aplicar_tema_plotly(fig_dev_pie)
                     st.plotly_chart(fig_dev_pie, use_container_width=True)
 
                 with col_dev_2:
@@ -440,6 +473,7 @@ else:
                     )
                     fig_dev_bar.update_traces(texttemplate='%{x:.2f}', textposition='outside')
                     fig_dev_bar.update_layout(height=max(300, len(dev_proyecto) * 40))
+                    fig_dev_bar = aplicar_tema_plotly(fig_dev_bar)
                     st.plotly_chart(fig_dev_bar, use_container_width=True)
 
             st.markdown("---")
@@ -460,6 +494,7 @@ else:
                 )
                 fig_horas_proy.update_traces(texttemplate='%{x:.2f}', textposition='outside')
                 fig_horas_proy.update_layout(height=max(300, len(proyectos_analisis) * 30))
+                fig_horas_proy = aplicar_tema_plotly(fig_horas_proy)
                 st.plotly_chart(fig_horas_proy, use_container_width=True)
 
             # Gráfico 2: Costo por Proyecto
@@ -475,6 +510,7 @@ else:
                 )
                 fig_costo_proy.update_traces(texttemplate='$%{x:,.0f}', textposition='outside')
                 fig_costo_proy.update_layout(height=max(300, len(proyectos_analisis) * 30))
+                fig_costo_proy = aplicar_tema_plotly(fig_costo_proy)
                 st.plotly_chart(fig_costo_proy, use_container_width=True)
 
             st.markdown("---")
@@ -492,6 +528,7 @@ else:
                     title="Proporción de Horas por Proyecto"
                 )
                 fig_dist_proy.update_layout(height=400)
+                fig_dist_proy = aplicar_tema_plotly(fig_dist_proy)
                 st.plotly_chart(fig_dist_proy, use_container_width=True)
 
             # Gráfico 4: Desarrolladores por Proyecto
@@ -507,6 +544,7 @@ else:
                 )
                 fig_dev_proy.update_traces(texttemplate='%{x}', textposition='outside')
                 fig_dev_proy.update_layout(height=max(300, len(proyectos_analisis) * 30))
+                fig_dev_proy = aplicar_tema_plotly(fig_dev_proy)
                 st.plotly_chart(fig_dev_proy, use_container_width=True)
 
         # ---------------------------------------------------------
@@ -555,6 +593,7 @@ else:
                     }
                 ))
                 fig_gauge.update_layout(height=350, margin=dict(l=10, r=10, t=30, b=10))
+                fig_gauge = aplicar_tema_plotly(fig_gauge)
                 st.plotly_chart(fig_gauge, use_container_width=True)
 
             # Gráfico 2: Costo vs Presupuesto
@@ -569,6 +608,7 @@ else:
                     number={'prefix': "$", 'suffix': ""}
                 ))
                 fig_costo.update_layout(height=150, margin=dict(l=10, r=10, t=30, b=10))
+                fig_costo = aplicar_tema_plotly(fig_costo)
                 st.plotly_chart(fig_costo, use_container_width=True)
 
                 col_c1, col_c2, col_c3 = st.columns(3)
@@ -591,6 +631,7 @@ else:
             )
             fig_persona.update_traces(texttemplate='%{x:.2f}', textposition='outside')
             fig_persona.update_layout(height=max(300, len(horas_por_persona) * 30))
+            fig_persona = aplicar_tema_plotly(fig_persona)
             st.plotly_chart(fig_persona, use_container_width=True)
 
         # ---------------------------------------------------------
@@ -685,6 +726,7 @@ else:
                         title=f"Distribución de Horas de {persona_selec_desglose}"
                     )
                     fig_pers_pie.update_layout(height=400)
+                    fig_pers_pie = aplicar_tema_plotly(fig_pers_pie)
                     st.plotly_chart(fig_pers_pie, use_container_width=True)
 
                 with col_pers_graf_2:
@@ -698,6 +740,7 @@ else:
                     )
                     fig_pers_bar.update_traces(texttemplate='%{x:.2f}', textposition='outside')
                     fig_pers_bar.update_layout(height=max(300, len(proyectos_persona) * 40))
+                    fig_pers_bar = aplicar_tema_plotly(fig_pers_bar)
                     st.plotly_chart(fig_pers_bar, use_container_width=True)
 
                 st.markdown("---")
@@ -730,6 +773,7 @@ else:
                 title="Proporción de Horas por Persona"
             )
             fig_dist.update_layout(height=400)
+            fig_dist = aplicar_tema_plotly(fig_dist)
             st.plotly_chart(fig_dist, use_container_width=True)
 
         # ---------------------------------------------------------
@@ -777,6 +821,7 @@ else:
             )
             fig_act.update_traces(texttemplate='%{text:.2f}', textposition='outside')
             fig_act.update_layout(height=400, xaxis_tickangle=-45)
+            fig_act = aplicar_tema_plotly(fig_act)
             st.plotly_chart(fig_act, use_container_width=True)
 
         # ---------------------------------------------------------
