@@ -647,30 +647,36 @@ else:
         proyectos_disponibles = sorted(df['Proyecto'].unique())
         proyecto_seleccionado = st.sidebar.selectbox("Seleccionar Ticket / Proyecto:", ["Todos"] + list(proyectos_disponibles))
 
-        # Obtener valores por defecto globales
-        config_global = obtener_presupuesto_proyecto("Todos", presupuestos)
-        valor_hora_default = config_global.get("costo_hora", 50.0)
-        presupuesto_horas_default = config_global.get("presupuesto_horas", 100.0)
+        # Obtener valores por defecto globales (si "Todos" no está configurado o es 0, usar 50.0/100.0)
+        config_global = presupuestos.get("Todos", {})
+        valor_hora_default = config_global.get("costo_hora") or 50.0
+        presupuesto_horas_default = config_global.get("presupuesto_horas") or 100.0
+
+        def costo_hora_de_proyecto(nombre_proyecto):
+            """Devuelve el costo/hora configurado para un proyecto, o el default si no está configurado."""
+            config = presupuestos.get(nombre_proyecto, {})
+            return config.get("costo_hora") or valor_hora_default
 
         # Aplicar filtro
         if proyecto_seleccionado == "Todos":
             df_filtrado = df.copy()
-            # Para "Todos", usar presupuesto global configurado
             valor_hora = valor_hora_default
             presupuesto_horas = presupuesto_horas_default
         else:
             df_filtrado = df[df['Proyecto'] == proyecto_seleccionado].copy()
-            # Obtener presupuesto específico del proyecto (si no existe, usa valores por defecto globales)
-            config_proyecto = obtener_presupuesto_proyecto(proyecto_seleccionado, presupuestos)
-            valor_hora = config_proyecto.get("costo_hora", valor_hora_default)
-            presupuesto_horas = config_proyecto.get("presupuesto_horas", presupuesto_horas_default)
+            # Obtener presupuesto específico del proyecto (si no existe o es 0, usa valores por defecto globales)
+            config_proyecto = presupuestos.get(proyecto_seleccionado, {})
+            valor_hora = config_proyecto.get("costo_hora") or valor_hora_default
+            presupuesto_horas = config_proyecto.get("presupuesto_horas") or presupuesto_horas_default
 
-        # Cálculos de la tabla
-        df_filtrado['Costo ($)'] = df_filtrado['Horas'] * valor_hora
+        # Cálculos de la tabla: cada fila usa el costo/hora de SU PROPIO proyecto
+        # (importante para la vista "Todos", donde cada proyecto puede tener un costo distinto)
+        df_filtrado['Costo ($)'] = df_filtrado['Horas'] * df_filtrado['Proyecto'].apply(costo_hora_de_proyecto)
 
         # 2. Tarjetas de Métricas (KPIs)
         total_horas = df_filtrado['Horas'].sum()
-        costo_total = total_horas * valor_hora
+        # Usar la suma real de costos por fila (respeta el costo/hora propio de cada proyecto en la vista "Todos")
+        costo_total = df_filtrado['Costo ($)'].sum()
 
         # Calcular estado del proyecto
         if presupuesto_horas > 0:
