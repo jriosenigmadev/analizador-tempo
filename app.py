@@ -15,6 +15,46 @@ from pathlib import Path
 # ---------------------------------------------------------
 st.set_page_config(page_title="Dashboard Financiero Tempo", layout="wide", page_icon="⏱️")
 
+# Inicializar estado de tema
+if "theme" not in st.session_state:
+    st.session_state.theme = "Automático"
+
+# Función para aplicar CSS de tema
+def aplicar_tema_css(tema):
+    if tema == "Claro":
+        css = """
+        <style>
+            :root {
+                color-scheme: light;
+            }
+            body {
+                background-color: #ffffff !important;
+                color: #1f1f1f !important;
+            }
+            .stApp {
+                background-color: #ffffff !important;
+            }
+            .stMarkdown {
+                color: #1f1f1f !important;
+            }
+        </style>
+        """
+    elif tema == "Oscuro":
+        css = """
+        <style>
+            :root {
+                color-scheme: dark;
+            }
+        </style>
+        """
+    else:  # Automático
+        css = ""
+
+    if css:
+        st.markdown(css, unsafe_allow_html=True)
+
+aplicar_tema_css(st.session_state.theme)
+
 # ---------------------------------------------------------
 # CONFIGURACIÓN DE AUTENTICACIÓN
 # ---------------------------------------------------------
@@ -80,6 +120,18 @@ st.markdown("Integración en tiempo real con la API v4 de **Tempo para Jira**.")
 with st.sidebar:
     st.write(f"**Bienvenido, {st.session_state.name}!** 👋")
     authenticator.logout(button_name="Cerrar sesión", location="sidebar")
+
+    # Selector de tema
+    theme = st.selectbox(
+        "🎨 Tema",
+        ["Automático", "Claro", "Oscuro"],
+        index=["Automático", "Claro", "Oscuro"].index(st.session_state.theme)
+    )
+    if theme != st.session_state.theme:
+        st.session_state.theme = theme
+        aplicar_tema_css(theme)
+        st.rerun()
+
     st.divider()
 
 # ---------------------------------------------------------
