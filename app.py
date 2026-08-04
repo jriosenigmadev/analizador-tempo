@@ -15,67 +15,255 @@ from pathlib import Path
 # ---------------------------------------------------------
 st.set_page_config(page_title="Dashboard Financiero Tempo", layout="wide", page_icon="⏱️")
 
-# Inicializar estado de tema
-if "theme" not in st.session_state:
-    st.session_state.theme = "Automático"
+# Función para aplicar tema empresarial claro
+def aplicar_tema_empresarial():
+    """Aplica CSS profesional y empresarial a la aplicación"""
+    css = """
+    <style>
+        /* ===== VARIABLES Y BASE ===== */
+        :root {
+            --primary-color: #003d99;
+            --primary-light: #0066cc;
+            --primary-dark: #002e73;
+            --accent-color: #0099ff;
+            --bg-main: #f8f9fb;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f0f4f8;
+            --text-primary: #1a1a1a;
+            --text-secondary: #505050;
+            --border-color: #d0d8e0;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
 
-# Función para aplicar tema
-def aplicar_tema(tema):
-    if tema == "Claro":
-        # Configurar template de Plotly para tema claro
-        import plotly.graph_objects as go
-        go.Figure().update_layout(template="plotly")
+        /* ===== APP GENERAL ===== */
+        [data-testid="stApp"] {
+            background-color: var(--bg-main) !important;
+        }
 
-        css = """
-        <style>
-            [data-testid="stApp"] {
-                background-color: #ffffff;
-                color: #1f1f1f;
-            }
-            body {
-                background-color: #ffffff !important;
-                color: #1f1f1f !important;
-            }
-            .stMarkdown, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3,
-            .stMarkdown h4, .stMarkdown h5, .stMarkdown h6, .stMarkdown p {
-                color: #1f1f1f !important;
-            }
-            .stMetric label {
-                color: #1f1f1f !important;
-            }
-            .stDataFrame {
-                background-color: #ffffff !important;
-            }
-            .stSelectbox label, .stTextInput label {
-                color: #1f1f1f !important;
-            }
-            .stSelectbox [data-baseweb="select"] {
-                background-color: #f0f2f6 !important;
-            }
-            /* Cambiar el fondo de la sidebar */
-            [data-testid="stSidebar"] {
-                background-color: #f8f9fa !important;
-            }
-            [data-testid="stSidebar"] .stMarkdown {
-                color: #1f1f1f !important;
-            }
-        </style>
-        """
-        st.session_state.plotly_template = "plotly"
-    elif tema == "Oscuro":
-        import plotly.graph_objects as go
-        go.Figure().update_layout(template="plotly_dark")
+        body {
+            background-color: var(--bg-main) !important;
+            color: var(--text-primary) !important;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        }
 
-        css = ""
-        st.session_state.plotly_template = "plotly_dark"
-    else:  # Automático
-        st.session_state.plotly_template = "plotly"
-        css = ""
+        /* ===== SIDEBAR ===== */
+        [data-testid="stSidebar"] {
+            background-color: var(--bg-secondary) !important;
+            border-right: 1px solid var(--border-color);
+        }
 
-    if css:
-        st.markdown(css, unsafe_allow_html=True)
+        [data-testid="stSidebar"] .stMarkdown {
+            color: var(--text-primary) !important;
+        }
 
-# Aplicar tema inicial
+        [data-testid="stSidebar"] h1,
+        [data-testid="stSidebar"] h2,
+        [data-testid="stSidebar"] h3 {
+            color: var(--primary-color) !important;
+            font-weight: 600;
+        }
+
+        /* ===== HEADER Y TÍTULOS ===== */
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--primary-color) !important;
+            font-weight: 600 !important;
+        }
+
+        .stMarkdown h1 {
+            font-size: 2.2em !important;
+            margin-bottom: 0.5em !important;
+            border-bottom: 3px solid var(--primary-light);
+            padding-bottom: 0.3em;
+        }
+
+        .stMarkdown h2 {
+            font-size: 1.6em !important;
+            margin-top: 1.2em !important;
+            margin-bottom: 0.6em !important;
+            color: var(--primary-dark) !important;
+        }
+
+        .stMarkdown h3 {
+            font-size: 1.2em !important;
+            margin-top: 0.8em !important;
+            color: var(--primary-color) !important;
+        }
+
+        /* ===== TEXTO GENERAL ===== */
+        .stMarkdown p,
+        .stMarkdown span {
+            color: var(--text-primary) !important;
+            line-height: 1.6;
+        }
+
+        .stMarkdown {
+            color: var(--text-primary) !important;
+        }
+
+        /* ===== BOTONES ===== */
+        .stButton > button {
+            background-color: var(--primary-light) !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 6px !important;
+            font-weight: 600 !important;
+            padding: 0.6em 1.5em !important;
+            transition: all 0.3s ease !important;
+            box-shadow: var(--shadow) !important;
+        }
+
+        .stButton > button:hover {
+            background-color: var(--primary-color) !important;
+            box-shadow: var(--shadow-md) !important;
+            transform: translateY(-2px) !important;
+        }
+
+        /* ===== INPUTS Y SELECTS ===== */
+        .stTextInput input,
+        .stNumberInput input,
+        .stDateInput input {
+            background-color: var(--bg-secondary) !important;
+            color: var(--text-primary) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 6px !important;
+            padding: 0.75em !important;
+        }
+
+        .stTextInput input:focus,
+        .stNumberInput input:focus,
+        .stDateInput input:focus {
+            border-color: var(--primary-light) !important;
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1) !important;
+        }
+
+        .stSelectbox {
+            color: var(--text-primary) !important;
+        }
+
+        .stSelectbox label {
+            color: var(--text-primary) !important;
+            font-weight: 600 !important;
+        }
+
+        /* ===== TABS ===== */
+        [role="tablist"] {
+            border-bottom: 2px solid var(--border-color) !important;
+        }
+
+        [role="tab"] {
+            color: var(--text-secondary) !important;
+            font-weight: 500 !important;
+        }
+
+        [role="tab"][aria-selected="true"] {
+            color: var(--primary-light) !important;
+            font-weight: 600 !important;
+            border-bottom: 3px solid var(--primary-light) !important;
+        }
+
+        /* ===== MÉTRICAS ===== */
+        .stMetric {
+            background-color: var(--bg-secondary) !important;
+            padding: 1.5em !important;
+            border-radius: 8px !important;
+            box-shadow: var(--shadow) !important;
+            border: 1px solid var(--border-color) !important;
+        }
+
+        .stMetric label {
+            color: var(--text-secondary) !important;
+            font-weight: 500 !important;
+            font-size: 0.9em !important;
+        }
+
+        .stMetric [data-testid="stMetricValue"] {
+            color: var(--primary-color) !important;
+            font-size: 1.8em !important;
+            font-weight: 700 !important;
+        }
+
+        /* ===== DATAFRAMES ===== */
+        .stDataFrame {
+            background-color: var(--bg-secondary) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 8px !important;
+        }
+
+        .stDataFrame tbody tr:hover {
+            background-color: var(--bg-tertiary) !important;
+        }
+
+        /* ===== DIVIDER ===== */
+        hr {
+            border-color: var(--border-color) !important;
+        }
+
+        /* ===== PROGRESS BAR ===== */
+        .stProgress > div > div {
+            background-color: var(--primary-light) !important;
+        }
+
+        /* ===== ALERTS Y MENSAJES ===== */
+        [data-testid="stAlert"] {
+            border-radius: 6px !important;
+        }
+
+        /* Success */
+        [data-testid="stAlert"][kind="success"] {
+            background-color: #e6f7f0 !important;
+            border-color: #20c997 !important;
+            color: #0d6047 !important;
+        }
+
+        /* Error */
+        [data-testid="stAlert"][kind="error"] {
+            background-color: #fce8e6 !important;
+            border-color: #d33b27 !important;
+            color: #8a0000 !important;
+        }
+
+        /* Warning */
+        [data-testid="stAlert"][kind="warning"] {
+            background-color: #fef7e0 !important;
+            border-color: #f57f17 !important;
+            color: #664d03 !important;
+        }
+
+        /* Info */
+        [data-testid="stAlert"][kind="info"] {
+            background-color: #e3f2fd !important;
+            border-color: #0066cc !important;
+            color: #003d99 !important;
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-main);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-light);
+        }
+    </style>
+    """
+    st.markdown(css, unsafe_allow_html=True)
+    st.session_state.plotly_template = "plotly"
+
+# Aplicar tema empresarial
+aplicar_tema_empresarial()
+
+# Inicializar estado de gráficos
 if "plotly_template" not in st.session_state:
     st.session_state.plotly_template = "plotly"
 
@@ -84,8 +272,6 @@ def aplicar_tema_plotly(fig):
     """Aplica el template de tema a un gráfico Plotly"""
     fig.update_layout(template=st.session_state.plotly_template)
     return fig
-
-aplicar_tema(st.session_state.theme)
 
 # ---------------------------------------------------------
 # CONFIGURACIÓN DE AUTENTICACIÓN
@@ -145,25 +331,38 @@ elif st.session_state.authentication_status is None:
     st.stop()
 
 # Si está autenticado, mostrar el dashboard
-st.title("⏱️ Cuadro de Control: Tiempos, Actividades y Presupuestos")
-st.markdown("Integración en tiempo real con la API v4 de **Tempo para Jira**.")
+st.markdown("""
+    <style>
+        .header-container {
+            background: linear-gradient(135deg, #003d99 0%, #0066cc 100%);
+            padding: 2rem;
+            border-radius: 8px;
+            color: white;
+            margin-bottom: 2rem;
+        }
+        .header-container h1 {
+            color: white !important;
+            margin: 0;
+            font-size: 2.5em;
+        }
+        .header-container p {
+            color: rgba(255, 255, 255, 0.9) !important;
+            margin: 0.5rem 0 0 0;
+            font-size: 1.1em;
+        }
+    </style>
+    <div class="header-container">
+        <h1>📊 Tempo Analytics</h1>
+        <p>Gestión integral de tiempos, actividades y presupuestos</p>
+    </div>
+""", unsafe_allow_html=True)
+
+st.markdown("**Integración en tiempo real con la API v4 de Tempo para Jira**", help="Dashboard de análisis y control de gestión de tiempo")
 
 # Botón de logout en la barra lateral
 with st.sidebar:
     st.write(f"**Bienvenido, {st.session_state.name}!** 👋")
     authenticator.logout(button_name="Cerrar sesión", location="sidebar")
-
-    # Selector de tema
-    theme = st.selectbox(
-        "🎨 Tema",
-        ["Automático", "Claro", "Oscuro"],
-        index=["Automático", "Claro", "Oscuro"].index(st.session_state.theme)
-    )
-    if theme != st.session_state.theme:
-        st.session_state.theme = theme
-        aplicar_tema(theme)
-        st.rerun()
-
     st.divider()
 
 # ---------------------------------------------------------
