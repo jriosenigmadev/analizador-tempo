@@ -454,82 +454,13 @@ if st.sidebar.button("🔄 Actualizar Datos"):
     st.cache_data.clear()
 
 # ---------------------------------------------------------
-# SECCIÓN DE PRESUPUESTOS POR PROYECTO
-# ---------------------------------------------------------
-st.sidebar.header("💰 4. Gestión de Presupuestos")
-st.sidebar.caption("Configurar presupuestos y costos por proyecto")
-
 # Cargar presupuestos existentes
 presupuestos = cargar_presupuestos()
 
-# Tab para gestionar presupuestos
-tab_view, tab_edit = st.sidebar.tabs(["👁️ Ver", "✏️ Editar"])
-
-with tab_view:
-    st.markdown("### 💰 Presupuestos Configurados")
-    if presupuestos:
-        # Agregar CSS personalizado para tarjetas
-        st.markdown("""
-        <style>
-            .presupuesto-card {
-                background: linear-gradient(135deg, #f0f4f8 0%, #ffffff 100%);
-                border: 2px solid #003d99;
-                border-radius: 12px;
-                padding: 1.5rem;
-                margin-bottom: 1rem;
-                box-shadow: 0 4px 12px rgba(0, 61, 153, 0.08);
-                transition: transform 0.2s, box-shadow 0.2s;
-            }
-            .presupuesto-card:hover {
-                transform: translateY(-4px);
-                box-shadow: 0 8px 16px rgba(0, 61, 153, 0.15);
-            }
-            .presupuesto-title {
-                color: #003d99;
-                font-size: 1.2em;
-                font-weight: 600;
-                margin-bottom: 0.8rem;
-            }
-            .presupuesto-value {
-                font-size: 1.5em;
-                font-weight: 700;
-                color: #002e73;
-            }
-            .presupuesto-label {
-                font-size: 0.85em;
-                color: #505050;
-                font-weight: 500;
-                margin-top: 0.3rem;
-            }
-        </style>
-        """, unsafe_allow_html=True)
-
-        # Mostrar presupuestos en grid
-        num_cols = 3
-        cols = st.columns(num_cols)
-
-        for idx, (proyecto, config) in enumerate(presupuestos.items()):
-            with cols[idx % num_cols]:
-                st.markdown(f"""
-                <div class="presupuesto-card">
-                    <div class="presupuesto-title">{proyecto}</div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                        <div>
-                            <div class="presupuesto-value">{config['presupuesto_horas']:.0f}</div>
-                            <div class="presupuesto-label">Horas</div>
-                        </div>
-                        <div>
-                            <div class="presupuesto-value">${config['costo_hora']:.2f}</div>
-                            <div class="presupuesto-label">Costo/Hora</div>
-                        </div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-    else:
-        st.info("No hay presupuestos configurados")
-
-with tab_edit:
-    st.markdown("**Agregar/Editar Presupuesto**")
+# SECCIÓN DE GESTIÓN DE PRESUPUESTOS EN SIDEBAR
+# ---------------------------------------------------------
+st.sidebar.header("💰 Gestión de Presupuestos")
+with st.sidebar.expander("✏️ Agregar/Editar Presupuesto"):
     col1, col2 = st.columns(2)
 
     with col1:
@@ -561,18 +492,18 @@ with tab_edit:
     col_btn1, col_btn2 = st.columns(2)
 
     with col_btn1:
-        if st.button("💾 Guardar Presupuesto", use_container_width=True):
+        if st.button("💾 Guardar", use_container_width=True):
             presupuestos[nombre_proyecto] = {
                 "presupuesto_horas": presupuesto_horas,
                 "costo_hora": costo_hora
             }
             guardar_presupuestos(presupuestos)
             st.cache_data.clear()
-            st.success(f"✅ Presupuesto guardado para {nombre_proyecto}")
+            st.success(f"✅ Presupuesto guardado")
             st.rerun()
 
     with col_btn2:
-        if st.button("🗑️ Eliminar Presupuesto", use_container_width=True):
+        if st.button("🗑️ Eliminar", use_container_width=True):
             if nombre_proyecto in presupuestos:
                 del presupuestos[nombre_proyecto]
                 guardar_presupuestos(presupuestos)
@@ -1223,6 +1154,71 @@ else:
         # TAB 5: ANÁLISIS DE PRESUPUESTOS
         # ---------------------------------------------------------
         with tab5:
+            # Mostrar presupuestos configurados
+            st.markdown("### 📊 Presupuestos Configurados")
+
+            if presupuestos:
+                # Agregar CSS personalizado para tarjetas
+                st.markdown("""
+                <style>
+                    .presupuesto-card {
+                        background: linear-gradient(135deg, #f0f4f8 0%, #ffffff 100%);
+                        border: 2px solid #003d99;
+                        border-radius: 12px;
+                        padding: 1.5rem;
+                        margin-bottom: 1rem;
+                        box-shadow: 0 4px 12px rgba(0, 61, 153, 0.08);
+                        transition: transform 0.2s, box-shadow 0.2s;
+                    }
+                    .presupuesto-card:hover {
+                        transform: translateY(-4px);
+                        box-shadow: 0 8px 16px rgba(0, 61, 153, 0.15);
+                    }
+                    .presupuesto-title {
+                        color: #003d99;
+                        font-size: 1.2em;
+                        font-weight: 600;
+                        margin-bottom: 0.8rem;
+                    }
+                    .presupuesto-value {
+                        font-size: 1.5em;
+                        font-weight: 700;
+                        color: #002e73;
+                    }
+                    .presupuesto-label {
+                        font-size: 0.85em;
+                        color: #505050;
+                        font-weight: 500;
+                        margin-top: 0.3rem;
+                    }
+                </style>
+                """, unsafe_allow_html=True)
+
+                # Mostrar presupuestos en grid
+                num_cols = 3
+                cols = st.columns(num_cols)
+
+                for idx, (proyecto, config) in enumerate(presupuestos.items()):
+                    with cols[idx % num_cols]:
+                        st.markdown(f"""
+                        <div class="presupuesto-card">
+                            <div class="presupuesto-title">{proyecto}</div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div>
+                                    <div class="presupuesto-value">{config['presupuesto_horas']:.0f}</div>
+                                    <div class="presupuesto-label">Horas</div>
+                                </div>
+                                <div>
+                                    <div class="presupuesto-value">${config['costo_hora']:.2f}</div>
+                                    <div class="presupuesto-label">Costo/Hora</div>
+                                </div>
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+            else:
+                st.info("ℹ️ No hay presupuestos configurados. Agrega uno en el sidebar.")
+
+            st.markdown("---")
             st.subheader("💰 Análisis de Presupuestos por Proyecto")
 
             # Obtener lista de proyectos únicos
