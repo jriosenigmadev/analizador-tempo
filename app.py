@@ -1398,7 +1398,14 @@ else:
 
             # Ranking de personas
             st.markdown("#### Ranking de Consumo por Persona")
-            ranking_export = ranking[["Persona", "Horas", "Costo", "% del Total"]]
+            ranking_export = df_filtrado.groupby("Persona").agg({
+                "Horas": "sum",
+                "Costo ($)": "sum"
+            }).reset_index()
+            ranking_export.columns = ["Persona", "Horas", "Costo"]
+            ranking_export = ranking_export.sort_values("Horas", ascending=False).reset_index(drop=True)
+            ranking_export.index = ranking_export.index + 1
+            ranking_export["% del Total"] = (ranking_export["Horas"] / ranking_export["Horas"].sum() * 100).round(2)
             st.dataframe(ranking_export, use_container_width=True)
 
             csv_ranking = ranking_export.to_csv(index=False).encode('utf-8')
