@@ -390,6 +390,82 @@ if st.sidebar.button("🔄 Actualizar Datos"):
     st.cache_data.clear()
 
 # ---------------------------------------------------------
+# SECCIÓN DE PRESUPUESTOS POR PROYECTO
+# ---------------------------------------------------------
+st.sidebar.header("💰 4. Gestión de Presupuestos")
+st.sidebar.caption("Configurar presupuestos y costos por proyecto")
+
+# Cargar presupuestos existentes
+presupuestos = cargar_presupuestos()
+
+# Tab para gestionar presupuestos
+tab_view, tab_edit = st.sidebar.tabs(["👁️ Ver", "✏️ Editar"])
+
+with tab_view:
+    st.markdown("**Presupuestos Configurados**")
+    if presupuestos:
+        for proyecto, config in presupuestos.items():
+            with st.container():
+                st.markdown(f"**{proyecto}**")
+                col1, col2 = st.columns(2)
+                col1.metric("Presupuesto", f"{config['presupuesto_horas']:.1f} hrs")
+                col2.metric("Costo/Hora", f"${config['costo_hora']:.2f}")
+    else:
+        st.info("No hay presupuestos configurados")
+
+with tab_edit:
+    st.markdown("**Agregar/Editar Presupuesto**")
+    col1, col2 = st.columns(2)
+
+    with col1:
+        nombre_proyecto = st.text_input(
+            "Nombre del Proyecto",
+            value="Nuevo Proyecto",
+            key="proyecto_name"
+        )
+
+    with col2:
+        # Obtener presupuesto anterior si existe
+        config_actual = presupuestos.get(nombre_proyecto, {"presupuesto_horas": 0, "costo_hora": 0})
+        presupuesto_horas = st.number_input(
+            "Presupuesto (Horas)",
+            min_value=0.0,
+            value=float(config_actual.get("presupuesto_horas", 0)),
+            step=5.0,
+            key="presupuesto_h"
+        )
+
+    costo_hora = st.number_input(
+        "Costo por Hora ($)",
+        min_value=0.0,
+        value=float(config_actual.get("costo_hora", 0)),
+        step=5.0,
+        key="costo_h"
+    )
+
+    col_btn1, col_btn2 = st.columns(2)
+
+    with col_btn1:
+        if st.button("💾 Guardar Presupuesto", use_container_width=True):
+            presupuestos[nombre_proyecto] = {
+                "presupuesto_horas": presupuesto_horas,
+                "costo_hora": costo_hora
+            }
+            guardar_presupuestos(presupuestos)
+            st.cache_data.clear()
+            st.success(f"✅ Presupuesto guardado para {nombre_proyecto}")
+            st.rerun()
+
+    with col_btn2:
+        if st.button("🗑️ Eliminar Presupuesto", use_container_width=True):
+            if nombre_proyecto in presupuestos:
+                del presupuestos[nombre_proyecto]
+                guardar_presupuestos(presupuestos)
+                st.cache_data.clear()
+                st.success(f"🗑️ Presupuesto eliminado")
+                st.rerun()
+
+# ---------------------------------------------------------
 # FUNCIÓN PARA CONSUMIR LA API DE TEMPO
 # ---------------------------------------------------------
 @st.cache_data(ttl=600, show_spinner="Descargando datos de Tempo...")
@@ -497,6 +573,71 @@ def procesar_worklogs(_datos_crudos, j_email, j_token):
 
 
 # ---------------------------------------------------------
+# FUNCIONES DE GESTIÓN DE PRESUPUESTOS POR PROYECTO
+# ---------------------------------------------------------
+@st.cache_data
+def cargar_presupuestos():
+    """Carga los presupuestos desde el archivo YAML"""
+    presupuestos_file = Path(__file__).parent / "presupuestos.yaml"
+
+    if not presupuestos_file.exists():
+        return {}
+
+    with open(presupuestos_file) as f:
+        config = yaml.load(f, Loader=yaml.SafeLoader)
+
+    return config.get("proyectos", {}) if config else {}
+
+def guardar_presupuestos(presupuestos):
+    """Guarda los presupuestos en el archivo YAML"""
+    presupuestos_file = Path(__file__).parent / "presupuestos.yaml"
+    config = {"proyectos": presupuestos}
+
+    with open(presupuestos_file, "w") as f:
+        yaml.dump(config, f)
+
+def obtener_presupuesto_proyecto(nombre_proyecto, presupuestos):
+    """Obtiene el presupuesto y costo de un proyecto"""
+    if nombre_proyecto in presupuestos:
+        return presupuestos[nombre_proyecto]
+    return {"presupuesto_horas": 0, "costo_hora": 0}
+
+def calcular_estado_proyecto(horas_usadas, presupuesto_horas, costo_hora):
+    """Calcula el estado de un proyecto basado en su presupuesto"""
+    if presupuesto_horas <= 0:
+        return {
+            "estado": "⚠️ Sin presupuesto",
+            "porcentaje": 0,
+            "horas_restantes": 0,
+            "costo_total": horas_usadas * costo_hora,
+            "costo_presupuestado": 0
+        }
+
+    porcentaje = (horas_usadas / presupuesto_horas) * 100
+    horas_restantes = max(0, presupuesto_horas - horas_usadas)
+    costo_total = horas_usadas * costo_hora
+    costo_presupuestado = presupuesto_horas * costo_hora
+
+    # Determinar el estado
+    if porcentaje < 75:
+        estado = "🟢 En control"
+    elif porcentaje < 100:
+        estado = "🟡 Cerca del límite"
+    elif porcentaje < 120:
+        estado = "🔴 Excedido"
+    else:
+        estado = "🔴🔴 Muy excedido"
+
+    return {
+        "estado": estado,
+        "porcentaje": porcentaje,
+        "horas_restantes": horas_restantes,
+        "costo_total": costo_total,
+        "costo_presupuestado": costo_presupuestado
+    }
+
+
+# ---------------------------------------------------------
 # LÓGICA PRINCIPAL DEL DASHBOARD
 # ---------------------------------------------------------
 if not api_token:
@@ -517,50 +658,55 @@ else:
         st.info("No se encontraron registros de tiempo en las fechas seleccionadas.")
     else:
         st.sidebar.markdown("---")
-        st.sidebar.header("⚙️ 3. Parámetros del Proyecto")
-        
+        st.sidebar.header("⚙️ 5. Selección de Proyecto")
+
         # Filtro de Proyecto/Ticket
         proyectos_disponibles = sorted(df['Proyecto'].unique())
         proyecto_seleccionado = st.sidebar.selectbox("Seleccionar Ticket / Proyecto:", ["Todos"] + list(proyectos_disponibles))
-        
-        # Parámetros Financieros
-        valor_hora = st.sidebar.number_input("Valor de la Hora ($):", min_value=0.0, value=50.0, step=5.0)
-        presupuesto_horas = st.sidebar.number_input("Presupuesto (Horas):", min_value=1.0, value=100.0, step=10.0)
-        
+
         # Aplicar filtro
         if proyecto_seleccionado == "Todos":
             df_filtrado = df.copy()
+            # Para "Todos", usar presupuesto global
+            valor_hora = 50.0
+            presupuesto_horas = 100.0
         else:
             df_filtrado = df[df['Proyecto'] == proyecto_seleccionado].copy()
-            
+            # Obtener presupuesto específico del proyecto
+            config_proyecto = obtener_presupuesto_proyecto(proyecto_seleccionado, presupuestos)
+            valor_hora = config_proyecto.get("costo_hora", 50.0)
+            presupuesto_horas = config_proyecto.get("presupuesto_horas", 100.0)
+
         # Cálculos de la tabla
         df_filtrado['Costo ($)'] = df_filtrado['Horas'] * valor_hora
-        
+
         # 2. Tarjetas de Métricas (KPIs)
         total_horas = df_filtrado['Horas'].sum()
         costo_total = total_horas * valor_hora
-        horas_restantes = presupuesto_horas - total_horas
-        porcentaje_uso = (total_horas / presupuesto_horas) * 100
-        
-        # Lógica de Semáforo
-        if porcentaje_uso < 80:
-            estado_color = "🟢 Saludable"
-        elif porcentaje_uso < 100:
-            estado_color = "🟠 Alerta (Cerca del límite)"
+
+        # Calcular estado del proyecto
+        if presupuesto_horas > 0:
+            horas_restantes = presupuesto_horas - total_horas
+            porcentaje_uso = (total_horas / presupuesto_horas) * 100
         else:
-            estado_color = "🔴 Peligro (Excedido)"
-            
-        st.markdown(f"### Resumen de Trabajo: {proyecto_seleccionado}")
+            horas_restantes = 0
+            porcentaje_uso = 0
+
+        # Usar la función de estado
+        estado_info = calcular_estado_proyecto(total_horas, presupuesto_horas, valor_hora)
+        estado_color = estado_info["estado"]
+
+        st.markdown(f"### 📊 Resumen: {proyecto_seleccionado}")
         kpi1, kpi2, kpi3, kpi4 = st.columns(4)
-        kpi1.metric("Total Horas Registradas", f"{total_horas:,.2f} hrs")
-        kpi2.metric("Costo Total Generado", f"${costo_total:,.2f}")
-        kpi3.metric("Horas Restantes", f"{horas_restantes:,.2f} hrs")
-        kpi4.metric("Estado del Presupuesto", estado_color)
+        kpi1.metric("Total Horas", f"{total_horas:,.2f} hrs", f"de {presupuesto_horas:.0f}")
+        kpi2.metric("Costo Real", f"${costo_total:,.2f}", f"de ${estado_info['costo_presupuestado']:,.2f}")
+        kpi3.metric("Horas Restantes", f"{max(horas_restantes, 0):,.2f} hrs")
+        kpi4.metric("Estado", estado_color)
         
         st.markdown("---")
 
         # TABS para organizar el dashboard
-        tab1, tab2, tab3, tab4, tab5 = st.tabs(["📈 Por Proyecto", "📊 Análisis General", "👥 Por Persona", "📋 Actividades", "📥 Descargar"])
+        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["📈 Por Proyecto", "📊 Análisis General", "👥 Por Persona", "📋 Actividades", "💰 Presupuestos", "📥 Descargar"])
 
         # ---------------------------------------------------------
         # TAB 1: ANÁLISIS POR PROYECTO
@@ -1024,9 +1170,127 @@ else:
             st.plotly_chart(fig_act, use_container_width=True)
 
         # ---------------------------------------------------------
-        # TAB 5: DESCARGAS
+        # TAB 5: ANÁLISIS DE PRESUPUESTOS
         # ---------------------------------------------------------
         with tab5:
+            st.subheader("💰 Análisis de Presupuestos por Proyecto")
+
+            # Obtener lista de proyectos únicos
+            proyectos_unicos = df['Proyecto'].unique()
+
+            # Crear tabla de análisis de presupuestos
+            datos_presupuestos = []
+
+            for proyecto in sorted(proyectos_unicos):
+                df_proyecto = df[df['Proyecto'] == proyecto]
+                horas_proyecto = df_proyecto['Horas'].sum()
+
+                config = obtener_presupuesto_proyecto(proyecto, presupuestos)
+                presupuesto = config.get("presupuesto_horas", 0)
+                costo_hora_p = config.get("costo_hora", 0)
+
+                estado = calcular_estado_proyecto(horas_proyecto, presupuesto, costo_hora_p)
+
+                datos_presupuestos.append({
+                    "Proyecto": proyecto,
+                    "Horas Usadas": horas_proyecto,
+                    "Presupuesto": presupuesto,
+                    "% Utilización": estado["porcentaje"],
+                    "Horas Restantes": estado["horas_restantes"],
+                    "Costo/Hora": costo_hora_p,
+                    "Costo Real": estado["costo_total"],
+                    "Costo Presupuestado": estado["costo_presupuestado"],
+                    "Estado": estado["estado"]
+                })
+
+            df_presupuestos = pd.DataFrame(datos_presupuestos)
+
+            if len(df_presupuestos) > 0:
+                # Mostrar tabla resumen
+                st.markdown("### 📋 Resumen de Presupuestos")
+                st.dataframe(
+                    df_presupuestos,
+                    use_container_width=True,
+                    hide_index=True,
+                    column_config={
+                        "Horas Usadas": st.column_config.NumberColumn("Horas Usadas", format="%.2f"),
+                        "Presupuesto": st.column_config.NumberColumn("Presupuesto", format="%.2f"),
+                        "% Utilización": st.column_config.NumberColumn("% Utilización", format="%.1f%%"),
+                        "Horas Restantes": st.column_config.NumberColumn("Horas Restantes", format="%.2f"),
+                        "Costo/Hora": st.column_config.NumberColumn("Costo/Hora", format="$%.2f"),
+                        "Costo Real": st.column_config.NumberColumn("Costo Real", format="$%.2f"),
+                        "Costo Presupuestado": st.column_config.NumberColumn("Costo Presupuestado", format="$%.2f")
+                    }
+                )
+
+                st.markdown("---")
+
+                # Gráficos de análisis de presupuestos
+                col_grafico_p1, col_grafico_p2 = st.columns(2)
+
+                with col_grafico_p1:
+                    st.markdown("#### Utilización vs Presupuesto por Proyecto")
+                    fig_presup = px.bar(
+                        df_presupuestos,
+                        x="Proyecto",
+                        y=["Horas Usadas", "Presupuesto"],
+                        barmode="group",
+                        title="Comparativa: Horas Usadas vs Presupuesto",
+                        labels={"value": "Horas", "variable": "Tipo"}
+                    )
+                    fig_presup = aplicar_tema_plotly(fig_presup)
+                    st.plotly_chart(fig_presup, use_container_width=True)
+
+                with col_grafico_p2:
+                    st.markdown("#### % Utilización del Presupuesto")
+                    # Crear gráfico de progress/utilización
+                    fig_util = px.bar(
+                        df_presupuestos.sort_values("% Utilización", ascending=True),
+                        x="% Utilización",
+                        y="Proyecto",
+                        orientation="h",
+                        title="Porcentaje de Utilización por Proyecto",
+                        labels={"% Utilización": "% Utilización"}
+                    )
+                    fig_util.add_vline(x=100, line_dash="dash", line_color="red", annotation_text="Límite")
+                    fig_util.add_vline(x=75, line_dash="dash", line_color="orange", annotation_text="Alerta")
+                    fig_util = aplicar_tema_plotly(fig_util)
+                    st.plotly_chart(fig_util, use_container_width=True)
+
+                st.markdown("---")
+
+                # Gráfico de costo
+                col_grafico_p3, col_grafico_p4 = st.columns(2)
+
+                with col_grafico_p3:
+                    st.markdown("#### Costo Real vs Presupuestado")
+                    fig_costo_p = px.bar(
+                        df_presupuestos,
+                        x="Proyecto",
+                        y=["Costo Real", "Costo Presupuestado"],
+                        barmode="group",
+                        title="Comparativa de Costos",
+                        labels={"value": "Costo ($)", "variable": "Tipo"}
+                    )
+                    fig_costo_p = aplicar_tema_plotly(fig_costo_p)
+                    st.plotly_chart(fig_costo_p, use_container_width=True)
+
+                with col_grafico_p4:
+                    st.markdown("#### Estado de Proyectos")
+                    # Contar proyectos por estado
+                    conteo_estados = df_presupuestos['Estado'].value_counts()
+                    fig_estados = px.pie(
+                        values=conteo_estados.values,
+                        names=conteo_estados.index,
+                        title="Distribución de Estados"
+                    )
+                    fig_estados = aplicar_tema_plotly(fig_estados)
+                    st.plotly_chart(fig_estados, use_container_width=True)
+
+        # ---------------------------------------------------------
+        # TAB 6: DESCARGAS
+        # ---------------------------------------------------------
+        with tab6:
             st.subheader("📥 Descargar Reportes")
 
             # Datos detallados

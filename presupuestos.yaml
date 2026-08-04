@@ -1,0 +1,7 @@
+proyectos:
+  "Proyecto Desconocido":
+    presupuesto_horas: 100.0
+    costo_hora: 50.0
+  "Proyecto Ejemplo":
+    presupuesto_horas: 80.0
+    costo_hora: 60.0
