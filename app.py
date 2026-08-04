@@ -648,15 +648,16 @@ else:
         # Aplicar filtro
         if proyecto_seleccionado == "Todos":
             df_filtrado = df.copy()
-            # Para "Todos", usar presupuesto global
-            valor_hora = 50.0
-            presupuesto_horas = 100.0
+            # Para "Todos", usar presupuesto global configurado
+            config_global = obtener_presupuesto_proyecto("Todos", presupuestos)
+            valor_hora = config_global.get("costo_hora", 0)
+            presupuesto_horas = config_global.get("presupuesto_horas", 0)
         else:
             df_filtrado = df[df['Proyecto'] == proyecto_seleccionado].copy()
             # Obtener presupuesto específico del proyecto
             config_proyecto = obtener_presupuesto_proyecto(proyecto_seleccionado, presupuestos)
-            valor_hora = config_proyecto.get("costo_hora", 50.0)
-            presupuesto_horas = config_proyecto.get("presupuesto_horas", 100.0)
+            valor_hora = config_proyecto.get("costo_hora", 0)
+            presupuesto_horas = config_proyecto.get("presupuesto_horas", 0)
 
         # Cálculos de la tabla
         df_filtrado['Costo ($)'] = df_filtrado['Horas'] * valor_hora
