@@ -1,0 +1,19 @@
+proyectos:
+  202303 PROYECTOS RENTAS/PDTIR:
+    costo_hora: 95000.0
+    presupuesto_horas: 400.0
+  202303 PROYECTOS RENTAS/PDTIR.:
+    costo_hora: 110000.0
+    presupuesto_horas: 200.0
+  202501 PROYECTOS NO DESARROLLADOS:
+    costo_hora: 110000.0
+    presupuesto_horas: 170.0
+  Enigma impuestos:
+    costo_hora: 110000.0
+    presupuesto_horas: 500.0
+  Proyecto Desconocido:
+    costo_hora: 50.0
+    presupuesto_horas: 100.0
+  Proyecto Ejemplo:
+    costo_hora: 60.0
+    presupuesto_horas: 80.0

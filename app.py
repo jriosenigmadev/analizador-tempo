@@ -15,45 +15,327 @@ from pathlib import Path
 # ---------------------------------------------------------
 st.set_page_config(page_title="Dashboard Financiero Tempo", layout="wide", page_icon="⏱️")
 
-# Inicializar estado de tema
-if "theme" not in st.session_state:
-    st.session_state.theme = "Automático"
+# Función para aplicar tema empresarial claro
+def aplicar_tema_empresarial():
+    """Aplica CSS profesional y empresarial a la aplicación"""
+    css = """
+    <style>
+        /* ===== VARIABLES Y BASE ===== */
+        :root {
+            --primary-color: #003d99;
+            --primary-light: #0066cc;
+            --primary-dark: #002e73;
+            --accent-color: #0099ff;
+            --bg-main: #f8f9fb;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f0f4f8;
+            --text-primary: #1a1a1a;
+            --text-secondary: #505050;
+            --border-color: #d0d8e0;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
 
-# Función para aplicar CSS de tema
-def aplicar_tema_css(tema):
-    if tema == "Claro":
-        css = """
-        <style>
-            :root {
-                color-scheme: light;
-            }
-            body {
-                background-color: #ffffff !important;
-                color: #1f1f1f !important;
-            }
-            .stApp {
-                background-color: #ffffff !important;
-            }
-            .stMarkdown {
-                color: #1f1f1f !important;
-            }
-        </style>
-        """
-    elif tema == "Oscuro":
-        css = """
-        <style>
-            :root {
-                color-scheme: dark;
-            }
-        </style>
-        """
-    else:  # Automático
-        css = ""
+        /* ===== APP GENERAL ===== */
+        [data-testid="stApp"] {
+            background-color: var(--bg-main) !important;
+        }
 
-    if css:
-        st.markdown(css, unsafe_allow_html=True)
+        body {
+            background-color: var(--bg-main) !important;
+            color: var(--text-primary) !important;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        }
 
-aplicar_tema_css(st.session_state.theme)
+        /* ===== SIDEBAR ===== */
+        [data-testid="stSidebar"] {
+            background-color: var(--bg-secondary) !important;
+            border-right: 1px solid var(--border-color);
+        }
+
+        [data-testid="stSidebar"] .stMarkdown {
+            color: var(--text-primary) !important;
+        }
+
+        [data-testid="stSidebar"] h1,
+        [data-testid="stSidebar"] h2,
+        [data-testid="stSidebar"] h3 {
+            color: var(--primary-color) !important;
+            font-weight: 600;
+        }
+
+        /* ===== HEADER Y TÍTULOS ===== */
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--primary-color) !important;
+            font-weight: 600 !important;
+        }
+
+        .stMarkdown h1 {
+            font-size: 2.2em !important;
+            margin-bottom: 0.5em !important;
+            border-bottom: 3px solid var(--primary-light);
+            padding-bottom: 0.3em;
+        }
+
+        .stMarkdown h2 {
+            font-size: 1.6em !important;
+            margin-top: 1.2em !important;
+            margin-bottom: 0.6em !important;
+            color: var(--primary-dark) !important;
+        }
+
+        .stMarkdown h3 {
+            font-size: 1.2em !important;
+            margin-top: 0.8em !important;
+            color: var(--primary-color) !important;
+        }
+
+        /* ===== TEXTO GENERAL ===== */
+        .stMarkdown p,
+        .stMarkdown span {
+            color: var(--text-primary) !important;
+            line-height: 1.6;
+        }
+
+        .stMarkdown {
+            color: var(--text-primary) !important;
+        }
+
+        /* ===== BOTONES ===== */
+        .stButton > button {
+            background-color: var(--primary-light) !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 6px !important;
+            font-weight: 600 !important;
+            padding: 0.6em 1.5em !important;
+            transition: all 0.3s ease !important;
+            box-shadow: var(--shadow) !important;
+        }
+
+        .stButton > button:hover {
+            background-color: var(--primary-color) !important;
+            box-shadow: var(--shadow-md) !important;
+            transform: translateY(-2px) !important;
+        }
+
+        /* ===== INPUTS Y SELECTS ===== */
+        .stTextInput input,
+        .stNumberInput input,
+        .stDateInput input {
+            background-color: var(--bg-secondary) !important;
+            color: var(--text-primary) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 6px !important;
+            padding: 0.75em !important;
+        }
+
+        .stTextInput input:focus,
+        .stNumberInput input:focus,
+        .stDateInput input:focus {
+            border-color: var(--primary-light) !important;
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1) !important;
+        }
+
+        .stSelectbox {
+            color: var(--text-primary) !important;
+        }
+
+        .stSelectbox label {
+            color: var(--text-primary) !important;
+            font-weight: 600 !important;
+        }
+
+        /* ===== TABS ===== */
+        [role="tablist"] {
+            border-bottom: 2px solid var(--border-color) !important;
+        }
+
+        [role="tab"] {
+            color: var(--text-secondary) !important;
+            font-weight: 500 !important;
+        }
+
+        [role="tab"][aria-selected="true"] {
+            color: var(--primary-light) !important;
+            font-weight: 600 !important;
+            border-bottom: 3px solid var(--primary-light) !important;
+        }
+
+        /* ===== MÉTRICAS ===== */
+        .stMetric {
+            background-color: var(--bg-secondary) !important;
+            padding: 1.5em !important;
+            border-radius: 8px !important;
+            box-shadow: var(--shadow) !important;
+            border: 1px solid var(--border-color) !important;
+        }
+
+        .stMetric label {
+            color: var(--text-secondary) !important;
+            font-weight: 500 !important;
+            font-size: 0.9em !important;
+        }
+
+        .stMetric [data-testid="stMetricValue"] {
+            color: var(--primary-color) !important;
+            font-size: 1.8em !important;
+            font-weight: 700 !important;
+        }
+
+        /* ===== DATAFRAMES ===== */
+        .stDataFrame {
+            background-color: var(--bg-secondary) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 8px !important;
+        }
+
+        .stDataFrame tbody tr:hover {
+            background-color: var(--bg-tertiary) !important;
+        }
+
+        /* ===== DIVIDER ===== */
+        hr {
+            border-color: var(--border-color) !important;
+        }
+
+        /* ===== PROGRESS BAR ===== */
+        .stProgress > div > div {
+            background-color: var(--primary-light) !important;
+        }
+
+        /* ===== ALERTS Y MENSAJES ===== */
+        [data-testid="stAlert"] {
+            border-radius: 6px !important;
+        }
+
+        /* Success */
+        [data-testid="stAlert"][kind="success"] {
+            background-color: #e6f7f0 !important;
+            border-color: #20c997 !important;
+            color: #0d6047 !important;
+        }
+
+        /* Error */
+        [data-testid="stAlert"][kind="error"] {
+            background-color: #fce8e6 !important;
+            border-color: #d33b27 !important;
+            color: #8a0000 !important;
+        }
+
+        /* Warning */
+        [data-testid="stAlert"][kind="warning"] {
+            background-color: #fef7e0 !important;
+            border-color: #f57f17 !important;
+            color: #664d03 !important;
+        }
+
+        /* Info */
+        [data-testid="stAlert"][kind="info"] {
+            background-color: #e3f2fd !important;
+            border-color: #0066cc !important;
+            color: #003d99 !important;
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-main);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-light);
+        }
+    </style>
+    """
+    st.markdown(css, unsafe_allow_html=True)
+    st.session_state.plotly_template = "plotly"
+
+# Aplicar tema empresarial
+aplicar_tema_empresarial()
+
+# Inicializar estado de gráficos
+if "plotly_template" not in st.session_state:
+    st.session_state.plotly_template = "plotly"
+
+# Función helper para aplicar tema a gráficos Plotly
+def aplicar_tema_plotly(fig):
+    """Aplica el template de tema a un gráfico Plotly"""
+    fig.update_layout(template=st.session_state.plotly_template)
+    return fig
+
+# ---------------------------------------------------------
+# FUNCIONES DE GESTIÓN DE PRESUPUESTOS POR PROYECTO
+# ---------------------------------------------------------
+@st.cache_data
+def cargar_presupuestos():
+    """Carga los presupuestos desde el archivo YAML"""
+    presupuestos_file = Path(__file__).parent / "presupuestos.yaml"
+
+    if not presupuestos_file.exists():
+        return {}
+
+    with open(presupuestos_file) as f:
+        config = yaml.load(f, Loader=yaml.SafeLoader)
+
+    return config.get("proyectos", {}) if config else {}
+
+def guardar_presupuestos(presupuestos):
+    """Guarda los presupuestos en el archivo YAML"""
+    presupuestos_file = Path(__file__).parent / "presupuestos.yaml"
+    config = {"proyectos": presupuestos}
+
+    with open(presupuestos_file, "w") as f:
+        yaml.dump(config, f)
+
+def obtener_presupuesto_proyecto(nombre_proyecto, presupuestos):
+    """Obtiene el presupuesto y costo de un proyecto"""
+    if nombre_proyecto in presupuestos:
+        return presupuestos[nombre_proyecto]
+    return {"presupuesto_horas": 0, "costo_hora": 0}
+
+def calcular_estado_proyecto(horas_usadas, presupuesto_horas, costo_hora):
+    """Calcula el estado de un proyecto basado en su presupuesto"""
+    if presupuesto_horas <= 0:
+        return {
+            "estado": "⚠️ Sin presupuesto",
+            "porcentaje": 0,
+            "horas_restantes": 0,
+            "costo_total": horas_usadas * costo_hora,
+            "costo_presupuestado": 0
+        }
+
+    porcentaje = (horas_usadas / presupuesto_horas) * 100
+    horas_restantes = max(0, presupuesto_horas - horas_usadas)
+    costo_total = horas_usadas * costo_hora
+    costo_presupuestado = presupuesto_horas * costo_hora
+
+    # Determinar el estado
+    if porcentaje < 75:
+        estado = "🟢 En control"
+    elif porcentaje < 100:
+        estado = "🟡 Cerca del límite"
+    elif porcentaje < 120:
+        estado = "🔴 Excedido"
+    else:
+        estado = "🔴🔴 Muy excedido"
+
+    return {
+        "estado": estado,
+        "porcentaje": porcentaje,
+        "horas_restantes": horas_restantes,
+        "costo_total": costo_total,
+        "costo_presupuestado": costo_presupuestado
+    }
 
 # ---------------------------------------------------------
 # CONFIGURACIÓN DE AUTENTICACIÓN
@@ -113,25 +395,38 @@ elif st.session_state.authentication_status is None:
     st.stop()
 
 # Si está autenticado, mostrar el dashboard
-st.title("⏱️ Cuadro de Control: Tiempos, Actividades y Presupuestos")
-st.markdown("Integración en tiempo real con la API v4 de **Tempo para Jira**.")
+st.markdown("""
+    <style>
+        .header-container {
+            background: linear-gradient(135deg, #003d99 0%, #0066cc 100%);
+            padding: 2rem;
+            border-radius: 8px;
+            color: white;
+            margin-bottom: 2rem;
+        }
+        .header-container h1 {
+            color: white !important;
+            margin: 0;
+            font-size: 2.5em;
+        }
+        .header-container p {
+            color: rgba(255, 255, 255, 0.9) !important;
+            margin: 0.5rem 0 0 0;
+            font-size: 1.1em;
+        }
+    </style>
+    <div class="header-container">
+        <h1>📊 Tempo Analytics</h1>
+        <p>Gestión integral de tiempos, actividades y presupuestos</p>
+    </div>
+""", unsafe_allow_html=True)
+
+st.markdown("**Integración en tiempo real con la API v4 de Tempo para Jira**", help="Dashboard de análisis y control de gestión de tiempo")
 
 # Botón de logout en la barra lateral
 with st.sidebar:
     st.write(f"**Bienvenido, {st.session_state.name}!** 👋")
     authenticator.logout(button_name="Cerrar sesión", location="sidebar")
-
-    # Selector de tema
-    theme = st.selectbox(
-        "🎨 Tema",
-        ["Automático", "Claro", "Oscuro"],
-        index=["Automático", "Claro", "Oscuro"].index(st.session_state.theme)
-    )
-    if theme != st.session_state.theme:
-        st.session_state.theme = theme
-        aplicar_tema_css(theme)
-        st.rerun()
-
     st.divider()
 
 # ---------------------------------------------------------
@@ -157,6 +452,66 @@ fecha_fin = st.sidebar.date_input("Fecha de Fin", ultimo_dia_mes)
 
 if st.sidebar.button("🔄 Actualizar Datos"):
     st.cache_data.clear()
+
+# ---------------------------------------------------------
+# Cargar presupuestos existentes
+presupuestos = cargar_presupuestos()
+
+# SECCIÓN DE GESTIÓN DE PRESUPUESTOS EN SIDEBAR
+# ---------------------------------------------------------
+st.sidebar.header("💰 Gestión de Presupuestos")
+st.sidebar.caption("📌 Configura valores por defecto con 'Todos' o específicos por proyecto")
+
+with st.sidebar.expander("✏️ Agregar/Editar Presupuesto"):
+    col1, col2 = st.columns(2)
+
+    with col1:
+        nombre_proyecto = st.text_input(
+            "Nombre del Proyecto",
+            value="Nuevo Proyecto",
+            key="proyecto_name"
+        )
+
+    with col2:
+        # Obtener presupuesto anterior si existe
+        config_actual = presupuestos.get(nombre_proyecto, {"presupuesto_horas": 0, "costo_hora": 0})
+        presupuesto_horas = st.number_input(
+            "Presupuesto (Horas)",
+            min_value=0.0,
+            value=float(config_actual.get("presupuesto_horas", 0)),
+            step=5.0,
+            key="presupuesto_h"
+        )
+
+    costo_hora = st.number_input(
+        "Costo por Hora ($)",
+        min_value=0.0,
+        value=float(config_actual.get("costo_hora", 0)),
+        step=5.0,
+        key="costo_h"
+    )
+
+    col_btn1, col_btn2 = st.columns(2)
+
+    with col_btn1:
+        if st.button("💾 Guardar", use_container_width=True):
+            presupuestos[nombre_proyecto] = {
+                "presupuesto_horas": presupuesto_horas,
+                "costo_hora": costo_hora
+            }
+            guardar_presupuestos(presupuestos)
+            st.cache_data.clear()
+            st.success(f"✅ Presupuesto guardado")
+            st.rerun()
+
+    with col_btn2:
+        if st.button("🗑️ Eliminar", use_container_width=True):
+            if nombre_proyecto in presupuestos:
+                del presupuestos[nombre_proyecto]
+                guardar_presupuestos(presupuestos)
+                st.cache_data.clear()
+                st.success(f"🗑️ Presupuesto eliminado")
+                st.rerun()
 
 # ---------------------------------------------------------
 # FUNCIÓN PARA CONSUMIR LA API DE TEMPO
@@ -286,50 +641,66 @@ else:
         st.info("No se encontraron registros de tiempo en las fechas seleccionadas.")
     else:
         st.sidebar.markdown("---")
-        st.sidebar.header("⚙️ 3. Parámetros del Proyecto")
-        
+        st.sidebar.header("⚙️ 5. Selección de Proyecto")
+
         # Filtro de Proyecto/Ticket
         proyectos_disponibles = sorted(df['Proyecto'].unique())
         proyecto_seleccionado = st.sidebar.selectbox("Seleccionar Ticket / Proyecto:", ["Todos"] + list(proyectos_disponibles))
-        
-        # Parámetros Financieros
-        valor_hora = st.sidebar.number_input("Valor de la Hora ($):", min_value=0.0, value=50.0, step=5.0)
-        presupuesto_horas = st.sidebar.number_input("Presupuesto (Horas):", min_value=1.0, value=100.0, step=10.0)
-        
+
+        # Obtener valores por defecto globales (si "Todos" no está configurado o es 0, usar 50.0/100.0)
+        config_global = presupuestos.get("Todos", {})
+        valor_hora_default = config_global.get("costo_hora") or 50.0
+        presupuesto_horas_default = config_global.get("presupuesto_horas") or 100.0
+
+        def costo_hora_de_proyecto(nombre_proyecto):
+            """Devuelve el costo/hora configurado para un proyecto, o el default si no está configurado."""
+            config = presupuestos.get(nombre_proyecto, {})
+            return config.get("costo_hora") or valor_hora_default
+
         # Aplicar filtro
         if proyecto_seleccionado == "Todos":
             df_filtrado = df.copy()
+            valor_hora = valor_hora_default
+            presupuesto_horas = presupuesto_horas_default
         else:
             df_filtrado = df[df['Proyecto'] == proyecto_seleccionado].copy()
-            
-        # Cálculos de la tabla
-        df_filtrado['Costo ($)'] = df_filtrado['Horas'] * valor_hora
-        
+            # Obtener presupuesto específico del proyecto (si no existe o es 0, usa valores por defecto globales)
+            config_proyecto = presupuestos.get(proyecto_seleccionado, {})
+            valor_hora = config_proyecto.get("costo_hora") or valor_hora_default
+            presupuesto_horas = config_proyecto.get("presupuesto_horas") or presupuesto_horas_default
+
+        # Cálculos de la tabla: cada fila usa el costo/hora de SU PROPIO proyecto
+        # (importante para la vista "Todos", donde cada proyecto puede tener un costo distinto)
+        df_filtrado['Costo ($)'] = df_filtrado['Horas'] * df_filtrado['Proyecto'].apply(costo_hora_de_proyecto)
+
         # 2. Tarjetas de Métricas (KPIs)
         total_horas = df_filtrado['Horas'].sum()
-        costo_total = total_horas * valor_hora
-        horas_restantes = presupuesto_horas - total_horas
-        porcentaje_uso = (total_horas / presupuesto_horas) * 100
-        
-        # Lógica de Semáforo
-        if porcentaje_uso < 80:
-            estado_color = "🟢 Saludable"
-        elif porcentaje_uso < 100:
-            estado_color = "🟠 Alerta (Cerca del límite)"
+        # Usar la suma real de costos por fila (respeta el costo/hora propio de cada proyecto en la vista "Todos")
+        costo_total = df_filtrado['Costo ($)'].sum()
+
+        # Calcular estado del proyecto
+        if presupuesto_horas > 0:
+            horas_restantes = presupuesto_horas - total_horas
+            porcentaje_uso = (total_horas / presupuesto_horas) * 100
         else:
-            estado_color = "🔴 Peligro (Excedido)"
-            
-        st.markdown(f"### Resumen de Trabajo: {proyecto_seleccionado}")
+            horas_restantes = 0
+            porcentaje_uso = 0
+
+        # Usar la función de estado
+        estado_info = calcular_estado_proyecto(total_horas, presupuesto_horas, valor_hora)
+        estado_color = estado_info["estado"]
+
+        st.markdown(f"### 📊 Resumen: {proyecto_seleccionado}")
         kpi1, kpi2, kpi3, kpi4 = st.columns(4)
-        kpi1.metric("Total Horas Registradas", f"{total_horas:,.2f} hrs")
-        kpi2.metric("Costo Total Generado", f"${costo_total:,.2f}")
-        kpi3.metric("Horas Restantes", f"{horas_restantes:,.2f} hrs")
-        kpi4.metric("Estado del Presupuesto", estado_color)
+        kpi1.metric("Total Horas", f"{total_horas:,.2f} hrs", f"de {presupuesto_horas:.0f}")
+        kpi2.metric("Costo Real", f"${costo_total:,.2f}", f"de ${estado_info['costo_presupuestado']:,.2f}")
+        kpi3.metric("Horas Restantes", f"{max(horas_restantes, 0):,.2f} hrs")
+        kpi4.metric("Estado", estado_color)
         
         st.markdown("---")
 
         # TABS para organizar el dashboard
-        tab1, tab2, tab3, tab4, tab5 = st.tabs(["📈 Por Proyecto", "📊 Análisis General", "👥 Por Persona", "📋 Actividades", "📥 Descargar"])
+        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["📈 Por Proyecto", "📊 Análisis General", "👥 Por Persona", "📋 Actividades", "💰 Presupuestos", "📥 Descargar"])
 
         # ---------------------------------------------------------
         # TAB 1: ANÁLISIS POR PROYECTO
@@ -427,6 +798,7 @@ else:
                         title=f"Distribución de Horas en {proyecto_selec_desglose}"
                     )
                     fig_dev_pie.update_layout(height=400)
+                    fig_dev_pie = aplicar_tema_plotly(fig_dev_pie)
                     st.plotly_chart(fig_dev_pie, use_container_width=True)
 
                 with col_dev_2:
@@ -440,6 +812,7 @@ else:
                     )
                     fig_dev_bar.update_traces(texttemplate='%{x:.2f}', textposition='outside')
                     fig_dev_bar.update_layout(height=max(300, len(dev_proyecto) * 40))
+                    fig_dev_bar = aplicar_tema_plotly(fig_dev_bar)
                     st.plotly_chart(fig_dev_bar, use_container_width=True)
 
             st.markdown("---")
@@ -460,6 +833,7 @@ else:
                 )
                 fig_horas_proy.update_traces(texttemplate='%{x:.2f}', textposition='outside')
                 fig_horas_proy.update_layout(height=max(300, len(proyectos_analisis) * 30))
+                fig_horas_proy = aplicar_tema_plotly(fig_horas_proy)
                 st.plotly_chart(fig_horas_proy, use_container_width=True)
 
             # Gráfico 2: Costo por Proyecto
@@ -475,6 +849,7 @@ else:
                 )
                 fig_costo_proy.update_traces(texttemplate='$%{x:,.0f}', textposition='outside')
                 fig_costo_proy.update_layout(height=max(300, len(proyectos_analisis) * 30))
+                fig_costo_proy = aplicar_tema_plotly(fig_costo_proy)
                 st.plotly_chart(fig_costo_proy, use_container_width=True)
 
             st.markdown("---")
@@ -492,6 +867,7 @@ else:
                     title="Proporción de Horas por Proyecto"
                 )
                 fig_dist_proy.update_layout(height=400)
+                fig_dist_proy = aplicar_tema_plotly(fig_dist_proy)
                 st.plotly_chart(fig_dist_proy, use_container_width=True)
 
             # Gráfico 4: Desarrolladores por Proyecto
@@ -507,6 +883,7 @@ else:
                 )
                 fig_dev_proy.update_traces(texttemplate='%{x}', textposition='outside')
                 fig_dev_proy.update_layout(height=max(300, len(proyectos_analisis) * 30))
+                fig_dev_proy = aplicar_tema_plotly(fig_dev_proy)
                 st.plotly_chart(fig_dev_proy, use_container_width=True)
 
         # ---------------------------------------------------------
@@ -555,6 +932,7 @@ else:
                     }
                 ))
                 fig_gauge.update_layout(height=350, margin=dict(l=10, r=10, t=30, b=10))
+                fig_gauge = aplicar_tema_plotly(fig_gauge)
                 st.plotly_chart(fig_gauge, use_container_width=True)
 
             # Gráfico 2: Costo vs Presupuesto
@@ -569,6 +947,7 @@ else:
                     number={'prefix': "$", 'suffix': ""}
                 ))
                 fig_costo.update_layout(height=150, margin=dict(l=10, r=10, t=30, b=10))
+                fig_costo = aplicar_tema_plotly(fig_costo)
                 st.plotly_chart(fig_costo, use_container_width=True)
 
                 col_c1, col_c2, col_c3 = st.columns(3)
@@ -591,6 +970,7 @@ else:
             )
             fig_persona.update_traces(texttemplate='%{x:.2f}', textposition='outside')
             fig_persona.update_layout(height=max(300, len(horas_por_persona) * 30))
+            fig_persona = aplicar_tema_plotly(fig_persona)
             st.plotly_chart(fig_persona, use_container_width=True)
 
         # ---------------------------------------------------------
@@ -599,138 +979,155 @@ else:
         with tab3:
             st.subheader("Top Consumidores de Horas")
 
-            # Crear ranking de personas
-            ranking = df_filtrado.groupby("Persona").agg({
-                "Horas": "sum",
-                "Costo ($)": "sum"
-            }).reset_index()
-            ranking.columns = ["Persona", "Horas", "Costo"]
-            ranking = ranking.sort_values("Horas", ascending=False).reset_index(drop=True)
-            ranking.index = ranking.index + 1
-            ranking["% del Total"] = (ranking["Horas"] / ranking["Horas"].sum() * 100).round(2)
-
-            # Top 5
-            st.markdown("#### 🏆 Top 5 Consumidores")
-            col_top = st.columns(5)
-            top_5 = ranking.head(5)
-
-            for idx, (col, (_, row)) in enumerate(zip(col_top, top_5.iterrows())):
-                with col:
-                    st.metric(
-                        f"#{idx+1} - {row['Persona']}",
-                        f"{row['Horas']:.2f} hrs",
-                        f"{row['% del Total']:.1f}% del total"
-                    )
-
-            st.markdown("---")
-
-            # Tabla completa de ranking
-            st.markdown("#### 📊 Ranking Completo")
-            st.dataframe(
-                ranking[["Persona", "Horas", "Costo", "% del Total"]],
-                use_container_width=True
+            # Filtro por persona
+            personas_disponibles = sorted(df_filtrado["Persona"].unique())
+            personas_seleccionadas = st.multiselect(
+                "🔎 Filtrar por Persona(s):",
+                personas_disponibles,
+                default=personas_disponibles,
+                key="filtro_personas"
             )
 
-            st.markdown("---")
+            if not personas_seleccionadas:
+                st.warning("⚠️ Selecciona al menos una persona para ver el análisis.")
+            else:
+                df_personas_filtrado = df_filtrado[df_filtrado["Persona"].isin(personas_seleccionadas)]
 
-            # Desglose por persona seleccionada
-            st.markdown("#### 📋 Desglose de Proyectos por Persona")
-
-            persona_selec_desglose = st.selectbox(
-                "Selecciona una persona para ver sus proyectos y horas:",
-                ranking["Persona"].tolist(),
-                key="persona_desglose"
-            )
-
-            if persona_selec_desglose:
-                # Filtrar datos de la persona seleccionada
-                df_persona = df_filtrado[df_filtrado["Persona"] == persona_selec_desglose]
-
-                # Crear tabla de proyectos de la persona
-                proyectos_persona = df_persona.groupby("Proyecto").agg({
+                # Crear ranking de personas
+                ranking = df_personas_filtrado.groupby("Persona").agg({
                     "Horas": "sum",
                     "Costo ($)": "sum"
                 }).reset_index()
-                proyectos_persona.columns = ["Proyecto", "Horas", "Costo"]
-                proyectos_persona = proyectos_persona.sort_values("Horas", ascending=False)
-                proyectos_persona["% de Sus Horas"] = (proyectos_persona["Horas"] / proyectos_persona["Horas"].sum() * 100).round(2)
-                proyectos_persona = proyectos_persona.reset_index(drop=True)
-                proyectos_persona.index = proyectos_persona.index + 1
+                ranking.columns = ["Persona", "Horas", "Costo"]
+                ranking = ranking.sort_values("Horas", ascending=False).reset_index(drop=True)
+                ranking.index = ranking.index + 1
+                ranking["% del Total"] = (ranking["Horas"] / ranking["Horas"].sum() * 100).round(2)
 
-                # Mostrar métricas de la persona
-                col_pers_1, col_pers_2, col_pers_3 = st.columns(3)
-                col_pers_1.metric("Proyectos en los que trabajó", len(proyectos_persona))
-                col_pers_2.metric("Total de Horas", f"{proyectos_persona['Horas'].sum():.2f}")
-                col_pers_3.metric("Costo Total Generado", f"${proyectos_persona['Costo'].sum():,.2f}")
+                # Top 5
+                st.markdown("#### 🏆 Top 5 Consumidores")
+                col_top = st.columns(5)
+                top_5 = ranking.head(5)
 
-                # Tabla de proyectos
-                st.dataframe(
-                    proyectos_persona[["Proyecto", "Horas", "Costo", "% de Sus Horas"]],
-                    use_container_width=True,
-                    column_config={
-                        "Horas": st.column_config.NumberColumn("Horas", format="%.2f"),
-                        "Costo": st.column_config.NumberColumn("Costo ($)", format="$%.2f"),
-                        "% de Sus Horas": st.column_config.NumberColumn("% de Sus Horas", format="%.2f%%")
-                    }
-                )
-
-                # Gráficos de proyectos de la persona
-                col_pers_graf_1, col_pers_graf_2 = st.columns(2)
-
-                with col_pers_graf_1:
-                    fig_pers_pie = px.pie(
-                        proyectos_persona,
-                        values="Horas",
-                        names="Proyecto",
-                        title=f"Distribución de Horas de {persona_selec_desglose}"
-                    )
-                    fig_pers_pie.update_layout(height=400)
-                    st.plotly_chart(fig_pers_pie, use_container_width=True)
-
-                with col_pers_graf_2:
-                    fig_pers_bar = px.bar(
-                        proyectos_persona.sort_values("Horas", ascending=True),
-                        x="Horas",
-                        y="Proyecto",
-                        orientation='h',
-                        title=f"Proyectos de {persona_selec_desglose}",
-                        text="Horas"
-                    )
-                    fig_pers_bar.update_traces(texttemplate='%{x:.2f}', textposition='outside')
-                    fig_pers_bar.update_layout(height=max(300, len(proyectos_persona) * 40))
-                    st.plotly_chart(fig_pers_bar, use_container_width=True)
+                for idx, (col, (_, row)) in enumerate(zip(col_top, top_5.iterrows())):
+                    with col:
+                        st.metric(
+                            f"#{idx+1} - {row['Persona']}",
+                            f"{row['Horas']:.2f} hrs",
+                            f"{row['% del Total']:.1f}% del total"
+                        )
 
                 st.markdown("---")
 
-                # Detalle de actividades de la persona
-                st.markdown(f"#### 📝 Actividades de {persona_selec_desglose}")
-                actividades_persona = df_persona.groupby(["Proyecto", "Actividad"]).agg({
-                    "Horas": "sum",
-                    "Costo ($)": "sum"
-                }).reset_index()
-                actividades_persona = actividades_persona.sort_values("Horas", ascending=False)
+                # Tabla completa de ranking
+                st.markdown("#### 📊 Ranking Completo")
                 st.dataframe(
-                    actividades_persona,
-                    use_container_width=True,
-                    hide_index=True,
-                    column_config={
-                        "Horas": st.column_config.NumberColumn("Horas", format="%.2f"),
-                        "Costo ($)": st.column_config.NumberColumn("Costo ($)", format="$%.2f")
-                    }
+                    ranking[["Persona", "Horas", "Costo", "% del Total"]],
+                    use_container_width=True
                 )
 
-            st.markdown("---")
+                st.markdown("---")
 
-            # Gráfico de distribución
-            st.subheader("Distribución de Horas por Persona")
-            fig_dist = px.pie(
-                ranking,
-                values="Horas",
-                names="Persona",
-                title="Proporción de Horas por Persona"
-            )
-            fig_dist.update_layout(height=400)
-            st.plotly_chart(fig_dist, use_container_width=True)
+                # Desglose por persona seleccionada
+                st.markdown("#### 📋 Desglose de Proyectos por Persona")
+
+                persona_selec_desglose = st.selectbox(
+                    "Selecciona una persona para ver sus proyectos y horas:",
+                    ranking["Persona"].tolist(),
+                    key="persona_desglose"
+                )
+
+                if persona_selec_desglose:
+                    # Filtrar datos de la persona seleccionada
+                    df_persona = df_personas_filtrado[df_personas_filtrado["Persona"] == persona_selec_desglose]
+
+                    # Crear tabla de proyectos de la persona
+                    proyectos_persona = df_persona.groupby("Proyecto").agg({
+                        "Horas": "sum",
+                        "Costo ($)": "sum"
+                    }).reset_index()
+                    proyectos_persona.columns = ["Proyecto", "Horas", "Costo"]
+                    proyectos_persona = proyectos_persona.sort_values("Horas", ascending=False)
+                    proyectos_persona["% de Sus Horas"] = (proyectos_persona["Horas"] / proyectos_persona["Horas"].sum() * 100).round(2)
+                    proyectos_persona = proyectos_persona.reset_index(drop=True)
+                    proyectos_persona.index = proyectos_persona.index + 1
+
+                    # Mostrar métricas de la persona
+                    col_pers_1, col_pers_2, col_pers_3 = st.columns(3)
+                    col_pers_1.metric("Proyectos en los que trabajó", len(proyectos_persona))
+                    col_pers_2.metric("Total de Horas", f"{proyectos_persona['Horas'].sum():.2f}")
+                    col_pers_3.metric("Costo Total Generado", f"${proyectos_persona['Costo'].sum():,.2f}")
+
+                    # Tabla de proyectos
+                    st.dataframe(
+                        proyectos_persona[["Proyecto", "Horas", "Costo", "% de Sus Horas"]],
+                        use_container_width=True,
+                        column_config={
+                            "Horas": st.column_config.NumberColumn("Horas", format="%.2f"),
+                            "Costo": st.column_config.NumberColumn("Costo ($)", format="$%.2f"),
+                            "% de Sus Horas": st.column_config.NumberColumn("% de Sus Horas", format="%.2f%%")
+                        }
+                    )
+
+                    # Gráficos de proyectos de la persona
+                    col_pers_graf_1, col_pers_graf_2 = st.columns(2)
+
+                    with col_pers_graf_1:
+                        fig_pers_pie = px.pie(
+                            proyectos_persona,
+                            values="Horas",
+                            names="Proyecto",
+                            title=f"Distribución de Horas de {persona_selec_desglose}"
+                        )
+                        fig_pers_pie.update_layout(height=400)
+                        fig_pers_pie = aplicar_tema_plotly(fig_pers_pie)
+                        st.plotly_chart(fig_pers_pie, use_container_width=True)
+
+                    with col_pers_graf_2:
+                        fig_pers_bar = px.bar(
+                            proyectos_persona.sort_values("Horas", ascending=True),
+                            x="Horas",
+                            y="Proyecto",
+                            orientation='h',
+                            title=f"Proyectos de {persona_selec_desglose}",
+                            text="Horas"
+                        )
+                        fig_pers_bar.update_traces(texttemplate='%{x:.2f}', textposition='outside')
+                        fig_pers_bar.update_layout(height=max(300, len(proyectos_persona) * 40))
+                        fig_pers_bar = aplicar_tema_plotly(fig_pers_bar)
+                        st.plotly_chart(fig_pers_bar, use_container_width=True)
+
+                    st.markdown("---")
+
+                    # Detalle de actividades de la persona
+                    st.markdown(f"#### 📝 Actividades de {persona_selec_desglose}")
+                    actividades_persona = df_persona.groupby(["Proyecto", "Actividad"]).agg({
+                        "Horas": "sum",
+                        "Costo ($)": "sum"
+                    }).reset_index()
+                    actividades_persona = actividades_persona.sort_values("Horas", ascending=False)
+                    st.dataframe(
+                        actividades_persona,
+                        use_container_width=True,
+                        hide_index=True,
+                        column_config={
+                            "Horas": st.column_config.NumberColumn("Horas", format="%.2f"),
+                            "Costo ($)": st.column_config.NumberColumn("Costo ($)", format="$%.2f")
+                        }
+                    )
+
+                st.markdown("---")
+
+                # Gráfico de distribución
+                st.subheader("Distribución de Horas por Persona")
+                fig_dist = px.pie(
+                    ranking,
+                    values="Horas",
+                    names="Persona",
+                    title="Proporción de Horas por Persona"
+                )
+                fig_dist.update_layout(height=400)
+                fig_dist = aplicar_tema_plotly(fig_dist)
+                st.plotly_chart(fig_dist, use_container_width=True)
 
         # ---------------------------------------------------------
         # TAB 4: ANÁLISIS POR ACTIVIDAD
@@ -777,12 +1174,196 @@ else:
             )
             fig_act.update_traces(texttemplate='%{text:.2f}', textposition='outside')
             fig_act.update_layout(height=400, xaxis_tickangle=-45)
+            fig_act = aplicar_tema_plotly(fig_act)
             st.plotly_chart(fig_act, use_container_width=True)
 
         # ---------------------------------------------------------
-        # TAB 5: DESCARGAS
+        # TAB 5: ANÁLISIS DE PRESUPUESTOS
         # ---------------------------------------------------------
         with tab5:
+            # Mostrar presupuestos configurados
+            st.markdown("### 📊 Presupuestos Configurados")
+
+            if presupuestos:
+                # Agregar CSS personalizado para tarjetas
+                st.markdown("""
+                <style>
+                    .presupuesto-card {
+                        background: linear-gradient(135deg, #f0f4f8 0%, #ffffff 100%);
+                        border: 2px solid #003d99;
+                        border-radius: 12px;
+                        padding: 1.5rem;
+                        margin-bottom: 1rem;
+                        box-shadow: 0 4px 12px rgba(0, 61, 153, 0.08);
+                        transition: transform 0.2s, box-shadow 0.2s;
+                    }
+                    .presupuesto-card:hover {
+                        transform: translateY(-4px);
+                        box-shadow: 0 8px 16px rgba(0, 61, 153, 0.15);
+                    }
+                    .presupuesto-title {
+                        color: #003d99;
+                        font-size: 1.2em;
+                        font-weight: 600;
+                        margin-bottom: 0.8rem;
+                    }
+                    .presupuesto-value {
+                        font-size: 1.5em;
+                        font-weight: 700;
+                        color: #002e73;
+                    }
+                    .presupuesto-label {
+                        font-size: 0.85em;
+                        color: #505050;
+                        font-weight: 500;
+                        margin-top: 0.3rem;
+                    }
+                </style>
+                """, unsafe_allow_html=True)
+
+                # Mostrar presupuestos en grid
+                num_cols = 3
+                cols = st.columns(num_cols)
+
+                for idx, (proyecto, config) in enumerate(presupuestos.items()):
+                    with cols[idx % num_cols]:
+                        st.markdown(f"""
+                        <div class="presupuesto-card">
+                            <div class="presupuesto-title">{proyecto}</div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div>
+                                    <div class="presupuesto-value">{config['presupuesto_horas']:.0f}</div>
+                                    <div class="presupuesto-label">Horas</div>
+                                </div>
+                                <div>
+                                    <div class="presupuesto-value">${config['costo_hora']:.2f}</div>
+                                    <div class="presupuesto-label">Costo/Hora</div>
+                                </div>
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+            else:
+                st.info("ℹ️ No hay presupuestos configurados. Agrega uno en el sidebar.")
+
+            st.markdown("---")
+            st.subheader("💰 Análisis de Presupuestos por Proyecto")
+
+            # Obtener lista de proyectos únicos
+            proyectos_unicos = df['Proyecto'].unique()
+
+            # Crear tabla de análisis de presupuestos
+            datos_presupuestos = []
+
+            for proyecto in sorted(proyectos_unicos):
+                df_proyecto = df[df['Proyecto'] == proyecto]
+                horas_proyecto = df_proyecto['Horas'].sum()
+
+                config = obtener_presupuesto_proyecto(proyecto, presupuestos)
+                presupuesto = config.get("presupuesto_horas", 0)
+                costo_hora_p = config.get("costo_hora", 0)
+
+                estado = calcular_estado_proyecto(horas_proyecto, presupuesto, costo_hora_p)
+
+                datos_presupuestos.append({
+                    "Proyecto": proyecto,
+                    "Horas Usadas": horas_proyecto,
+                    "Presupuesto": presupuesto,
+                    "% Utilización": estado["porcentaje"],
+                    "Horas Restantes": estado["horas_restantes"],
+                    "Costo/Hora": costo_hora_p,
+                    "Costo Real": estado["costo_total"],
+                    "Costo Presupuestado": estado["costo_presupuestado"],
+                    "Estado": estado["estado"]
+                })
+
+            df_presupuestos = pd.DataFrame(datos_presupuestos)
+
+            if len(df_presupuestos) > 0:
+                # Mostrar tabla resumen
+                st.markdown("### 📋 Resumen de Presupuestos")
+                st.dataframe(
+                    df_presupuestos,
+                    use_container_width=True,
+                    hide_index=True,
+                    column_config={
+                        "Horas Usadas": st.column_config.NumberColumn("Horas Usadas", format="%.2f"),
+                        "Presupuesto": st.column_config.NumberColumn("Presupuesto", format="%.2f"),
+                        "% Utilización": st.column_config.NumberColumn("% Utilización", format="%.1f%%"),
+                        "Horas Restantes": st.column_config.NumberColumn("Horas Restantes", format="%.2f"),
+                        "Costo/Hora": st.column_config.NumberColumn("Costo/Hora", format="$%.2f"),
+                        "Costo Real": st.column_config.NumberColumn("Costo Real", format="$%.2f"),
+                        "Costo Presupuestado": st.column_config.NumberColumn("Costo Presupuestado", format="$%.2f")
+                    }
+                )
+
+                st.markdown("---")
+
+                # Gráficos de análisis de presupuestos
+                col_grafico_p1, col_grafico_p2 = st.columns(2)
+
+                with col_grafico_p1:
+                    st.markdown("#### Utilización vs Presupuesto por Proyecto")
+                    fig_presup = px.bar(
+                        df_presupuestos,
+                        x="Proyecto",
+                        y=["Horas Usadas", "Presupuesto"],
+                        barmode="group",
+                        title="Comparativa: Horas Usadas vs Presupuesto",
+                        labels={"value": "Horas", "variable": "Tipo"}
+                    )
+                    fig_presup = aplicar_tema_plotly(fig_presup)
+                    st.plotly_chart(fig_presup, use_container_width=True)
+
+                with col_grafico_p2:
+                    st.markdown("#### % Utilización del Presupuesto")
+                    # Crear gráfico de progress/utilización
+                    fig_util = px.bar(
+                        df_presupuestos.sort_values("% Utilización", ascending=True),
+                        x="% Utilización",
+                        y="Proyecto",
+                        orientation="h",
+                        title="Porcentaje de Utilización por Proyecto",
+                        labels={"% Utilización": "% Utilización"}
+                    )
+                    fig_util.add_vline(x=100, line_dash="dash", line_color="red", annotation_text="Límite")
+                    fig_util.add_vline(x=75, line_dash="dash", line_color="orange", annotation_text="Alerta")
+                    fig_util = aplicar_tema_plotly(fig_util)
+                    st.plotly_chart(fig_util, use_container_width=True)
+
+                st.markdown("---")
+
+                # Gráfico de costo
+                col_grafico_p3, col_grafico_p4 = st.columns(2)
+
+                with col_grafico_p3:
+                    st.markdown("#### Costo Real vs Presupuestado")
+                    fig_costo_p = px.bar(
+                        df_presupuestos,
+                        x="Proyecto",
+                        y=["Costo Real", "Costo Presupuestado"],
+                        barmode="group",
+                        title="Comparativa de Costos",
+                        labels={"value": "Costo ($)", "variable": "Tipo"}
+                    )
+                    fig_costo_p = aplicar_tema_plotly(fig_costo_p)
+                    st.plotly_chart(fig_costo_p, use_container_width=True)
+
+                with col_grafico_p4:
+                    st.markdown("#### Estado de Proyectos")
+                    # Contar proyectos por estado
+                    conteo_estados = df_presupuestos['Estado'].value_counts()
+                    fig_estados = px.pie(
+                        values=conteo_estados.values,
+                        names=conteo_estados.index,
+                        title="Distribución de Estados"
+                    )
+                    fig_estados = aplicar_tema_plotly(fig_estados)
+                    st.plotly_chart(fig_estados, use_container_width=True)
+
+        # ---------------------------------------------------------
+        # TAB 6: DESCARGAS
+        # ---------------------------------------------------------
+        with tab6:
             st.subheader("📥 Descargar Reportes")
 
             # Datos detallados
@@ -812,12 +1393,17 @@ else:
                 file_name=f"reporte_tempo_resumen_{proyecto_seleccionado}.csv",
                 mime="text/csv",
             )
-
             st.markdown("---")
-
             # Ranking de personas
             st.markdown("#### Ranking de Consumo por Persona")
-            ranking_export = ranking[["Persona", "Horas", "Costo", "% del Total"]]
+            ranking_export = df_filtrado.groupby("Persona").agg({
+                "Horas": "sum",
+                "Costo ($)": "sum"
+            }).reset_index()
+            ranking_export.columns = ["Persona", "Horas", "Costo"]
+            ranking_export = ranking_export.sort_values("Horas", ascending=False).reset_index(drop=True)
+            ranking_export.index = ranking_export.index + 1
+            ranking_export["% del Total"] = (ranking_export["Horas"] / ranking_export["Horas"].sum() * 100).round(2)
             st.dataframe(ranking_export, use_container_width=True)
 
             csv_ranking = ranking_export.to_csv(index=False).encode('utf-8')
@@ -827,9 +1413,7 @@ else:
                 file_name=f"reporte_tempo_ranking_{proyecto_seleccionado}.csv",
                 mime="text/csv",
             )
-
             st.markdown("---")
-
             # Análisis por proyecto
             st.markdown("#### Análisis por Proyecto")
             proyectos_descarga = df_filtrado.groupby("Proyecto").agg({
