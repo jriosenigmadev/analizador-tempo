@@ -1,0 +1,18 @@
+credentials:
+  usernames:
+    admin:
+      email: admin@example.com
+      name: Administrador
+      password: admin123
+    usuario:
+      email: user@example.com
+      name: Usuario Demo
+      password: demo123
+
+cookie:
+  expiry_days: 30
+  key: tempo_dashboard_key
+  name: tempo_auth
+
+pre-authorized:
+  emails: []
