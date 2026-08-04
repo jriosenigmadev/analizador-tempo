@@ -1415,9 +1415,7 @@ else:
                 file_name=f"reporte_tempo_ranking_{proyecto_seleccionado}.csv",
                 mime="text/csv",
             )
-
             st.markdown("---")
-
             # Análisis por proyecto
             st.markdown("#### Análisis por Proyecto")
             proyectos_descarga = df_filtrado.groupby("Proyecto").agg({
