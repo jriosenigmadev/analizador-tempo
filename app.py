@@ -1393,9 +1393,7 @@ else:
                 file_name=f"reporte_tempo_resumen_{proyecto_seleccionado}.csv",
                 mime="text/csv",
             )
-
             st.markdown("---")
-
             # Ranking de personas
             st.markdown("#### Ranking de Consumo por Persona")
             ranking_export = df_filtrado.groupby("Persona").agg({
